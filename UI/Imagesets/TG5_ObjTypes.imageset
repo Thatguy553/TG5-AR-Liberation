@@ -1,0 +1,42 @@
+ImageSetClass {
+ RefSize 136 204
+ Textures {
+  ImageSetTextureClass "{6A32D7138533740E}" {
+   screenSize FHD
+   size 136 204
+   path "{2B3474704A3317BC}UI/Imagesets/TG5_ObjTypes-100_atlas.edds"
+  }
+ }
+ Images {
+  ImageSetDefClass fob {
+   Pos 2 2
+   Size 64 64
+   Flags 0 0
+  }
+  ImageSetDefClass factory {
+   Pos 68 2
+   Size 64 64
+   Flags 0 0
+  }
+  ImageSetDefClass town {
+   Pos 2 68
+   Size 64 64
+   Flags 0 0
+  }
+  ImageSetDefClass radio {
+   Pos 68 68
+   Size 64 64
+   Flags 0 0
+  }
+  ImageSetDefClass city {
+   Pos 2 134
+   Size 64 64
+   Flags 0 0
+  }
+  ImageSetDefClass military {
+   Pos 68 134
+   Size 64 64
+   Flags 0 0
+  }
+ }
+}

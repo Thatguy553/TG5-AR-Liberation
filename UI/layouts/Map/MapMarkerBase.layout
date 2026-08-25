@@ -1,0 +1,332 @@
+FrameWidgetClass "{699D0E4984CEEA50}" {
+ Name "rootFrame"
+ Slot FrameWidgetSlot "{5D2691F3AE61A7FC}" {
+  OffsetLeft 0
+  OffsetTop 0
+  SizeX 90
+  OffsetRight -90
+  SizeY 90
+  OffsetBottom -90
+  Alignment 0.5 0.5
+ }
+ "Z Order" 60
+ Clipping False
+ "Ignore Cursor" 0
+ components {
+  SCR_MapMarkerWidgetComponent "{5D5280F6FAEE865B}" {
+  }
+  SCR_MapElementMoveComponent "{5E3CD8EAE8051CB0}" {
+  }
+ }
+ {
+  VerticalLayoutWidgetClass "{699D0E4984CEEA4F}" {
+   Name "VerticalLayout0"
+   Slot FrameWidgetSlot "{5D56BA46E7717D6A}" {
+    Anchor 0.5 0 0.5 0
+    PositionX 0
+    OffsetLeft 0
+    OffsetTop 0
+    SizeX 100
+    OffsetRight -100
+    SizeY 30
+    OffsetBottom -30
+    Alignment 0.5 0
+    SizeToContent 1
+   }
+   {
+    TextWidgetClass "{699D0E4984CEEA4D}" {
+     Name "MarkerTimestamp"
+     Slot LayoutSlot "{65671A61829AE7A1}" {
+     }
+     Color 0.0003 0.0003 0.0003 1
+     Text " "
+     "Font Size" 12
+     "Min Font Size" 12
+     "Horizontal Alignment" Center
+     Offset 0 0
+    }
+    FrameWidgetClass "{699D0E4984CEEA4C}" {
+     Name "Frame0"
+     Slot LayoutSlot "{5E3E82F0B6DE3AE5}" {
+      HorizontalAlign 1
+      VerticalAlign 1
+      SizeMode Fill
+     }
+     {
+      ImageWidgetClass "{699D0E4984CEEA4B}" {
+       Name "MarkerIconGlow"
+       Slot FrameWidgetSlot "{5E3E82F0B6D23F67}" {
+        SizeToContent 1
+       }
+       "Is Visible" 0
+       Clipping False
+       Color 0.007 0.012 0.014 0.6
+       Texture "{67B3A6DC2D712B52}UI/Textures/Icons/icons_mapMarkersUI-glow.imageset"
+       Image "point-of-interest"
+       Size 56 56
+      }
+      ImageWidgetClass "{699D0E4984CF231F}" {
+       Name "MarkerIcon"
+       Slot FrameWidgetSlot "{5E3E82F0B6D23F67}" {
+        SizeToContent 1
+       }
+       Clipping False
+       Texture "{E23427CAC80DA8B7}UI/Textures/Icons/icons_mapMarkersUI.imageset"
+       Image "point-of-interest"
+       Size 56 56
+      }
+     }
+    }
+    SizeLayoutWidgetClass "{699D0E4984CF231D}" {
+     Name "SymbolWidget"
+     Slot LayoutSlot "{5DB880D509DB9B90}" {
+      HorizontalAlign 1
+      VerticalAlign 1
+     }
+     "Is Enabled" 0
+     "Is Visible" 0
+     AllowWidthOverride 1
+     WidthOverride 56
+     AllowHeightOverride 1
+     HeightOverride 56
+     {
+      OverlayWidgetClass "{699D0E4984CF9513}" {
+       Name "SymbolOverlay"
+       Slot AlignableSlot "{5DB880D509AA11C2}" {
+        HorizontalAlign 3
+        VerticalAlign 3
+       }
+       components {
+        SCR_MilitarySymbolUIComponent "{5DB880D56B45FA22}" {
+         m_MilitarySymbol SCR_MilitarySymbol "{5DB880D56FF1176A}" {
+          m_Identity BLUFOR
+          m_Icons INFANTRY
+         }
+        }
+       }
+      }
+     }
+    }
+    TextWidgetClass "{699D0E4984CF9512}" {
+     Name "MarkerText"
+     Slot LayoutSlot "{5D8AED759625D73D}" {
+     }
+     Clipping False
+     Color 0 0.001 0 1
+     Text ""
+     "Font Size" 18
+     "Min Font Size" 18
+     "Horizontal Alignment" Center
+     FontProperties FontProperties "{5D2693726AAD1299}" {
+      Font "{3E7733BAC8C831F6}UI/Fonts/RobotoCondensed/RobotoCondensed_Regular.fnt"
+      Bold 1
+      ShadowSize 3
+     }
+    }
+    HorizontalLayoutWidgetClass "{699D0E4984CFC2C4}" {
+     Name "HorizontalLayout0"
+     Slot LayoutSlot "{627C693E4DB0469B}" {
+      HorizontalAlign 1
+      VerticalAlign 0
+      Padding 0 2 0 0
+     }
+     {
+      ImageWidgetClass "{699D0E4984CFC2CB}" {
+       Name "PlatformIcon"
+       Slot LayoutSlot "{627C69318E3FFA61}" {
+        HorizontalAlign 2
+        VerticalAlign 1
+        Padding 2 0 2 0
+       }
+       "Is Visible" 0
+       Clipping False
+       Texture "{3262679C50EF4F01}UI/Textures/Icons/icons_wrapperUI.imageset"
+       Image "public"
+       Size 16 16
+      }
+      TextWidgetClass "{699D0E4984C81C79}" {
+       Name "MarkerAuthor"
+       Slot LayoutSlot "{5D56BA46CC7AE802}" {
+        HorizontalAlign 0
+        VerticalAlign 1
+        Padding 2 0 2 0
+       }
+       "Is Visible" 0
+       Clipping False
+       Color 0.0742 0.0742 0.0742 1
+       Text ""
+       "Font Size" 12
+       "Min Font Size" 12
+       "Horizontal Alignment" Center
+       FontProperties FontProperties "{5D2693726AAD1299}" {
+        Font "{3E7733BAC8C831F6}UI/Fonts/RobotoCondensed/RobotoCondensed_Regular.fnt"
+        ShadowSize 3
+       }
+      }
+      ImageWidgetClass "{699D0E4984C81C78}" {
+       Name "MarkerModeIcon"
+       Slot LayoutSlot "{627C69318E3FFA61}" {
+        HorizontalAlign 2
+        VerticalAlign 1
+        Padding 2 0 2 0
+       }
+       "Is Visible" 0
+       Clipping False
+       Color 0.0742 0.0742 0.0742 1
+       Texture "{3262679C50EF4F01}UI/Textures/Icons/icons_wrapperUI.imageset"
+       Image "public"
+       Size 16 16
+      }
+     }
+    }
+    HorizontalLayoutWidgetClass "{699D0E4984C808B5}" {
+     Name "TypeIconHLayout"
+     Slot LayoutSlot "{5EF69515ACDA89C9}" {
+      HorizontalAlign 1
+      VerticalAlign 0
+      Padding 0 0 0 2
+     }
+     "Is Visible" 0
+     {
+      OverlayWidgetClass "{699D0E4984C808B6}" {
+       Name "TypeOverlay1"
+       Slot LayoutSlot "{599ACE656D6CB8D7}" {
+        HorizontalAlign 1
+        VerticalAlign 1
+        FillWeight 1
+       }
+       "Is Visible" 0
+       "Inherit Color" 1
+       {
+        ImageWidgetClass "{699D0E4984C833A3}" {
+         Name "TypeBackground"
+         Slot OverlayWidgetSlot "{599ACE6775AB1524}" {
+          HorizontalAlign 3
+          VerticalAlign 3
+         }
+         Opacity 0.3
+         Size 0 0
+        }
+        FrameWidgetClass "{699D0E4984C833A2}" {
+         Name "TypeFrame"
+         Slot OverlayWidgetSlot "{599ACE65B54D9742}" {
+          Padding 4 2 4 2
+         }
+         Clipping True
+         {
+          RichTextWidgetClass "{699D0E4984C833A5}" {
+           Name "TypeText1"
+           Slot FrameWidgetSlot "{599ACE65B57F9E0C}" {
+            SizeToContent 1
+           }
+           Color 0 0 0 1
+           Text "Land"
+           "Font Size" 16
+           "Min Font Size" 12
+           FontProperties FontProperties "{593899005F425640}" {
+            Font "{EABA4FE9D014CCEF}UI/Fonts/RobotoCondensed/RobotoCondensed_Bold.fnt"
+           }
+          }
+         }
+        }
+       }
+      }
+      OverlayWidgetClass "{699D0E4984C891D8}" {
+       Name "TypeOverlay2"
+       Slot LayoutSlot "{599ACE656D6CB8D7}" {
+        HorizontalAlign 1
+        VerticalAlign 1
+        Padding 2 0 0 0
+       }
+       "Is Visible" 0
+       "Inherit Color" 1
+       {
+        ImageWidgetClass "{699D0E4984C891D9}" {
+         Name "TypeBackground"
+         Slot OverlayWidgetSlot "{599ACE6775AB1524}" {
+          HorizontalAlign 3
+          VerticalAlign 3
+         }
+         Opacity 0.3
+         Size 0 0
+        }
+        FrameWidgetClass "{699D0E4984C8886B}" {
+         Name "TypeFrame"
+         Slot OverlayWidgetSlot "{599ACE65B54D9742}" {
+          Padding 4 2 4 2
+         }
+         Clipping True
+         {
+          RichTextWidgetClass "{699D0E4984C88868}" {
+           Name "TypeText2"
+           Slot FrameWidgetSlot "{599ACE65B57F9E0C}" {
+            SizeToContent 1
+           }
+           Color 0 0 0 1
+           Text "Infantry"
+           "Font Size" 16
+           "Min Font Size" 12
+           FontProperties FontProperties "{593899005F425640}" {
+            Font "{EABA4FE9D014CCEF}UI/Fonts/RobotoCondensed/RobotoCondensed_Bold.fnt"
+           }
+          }
+         }
+        }
+       }
+      }
+      OverlayWidgetClass "{699D0E4984C8DB61}" {
+       Name "TypeOverlay3"
+       Slot LayoutSlot "{599ACE656D6CB8D7}" {
+        HorizontalAlign 1
+        VerticalAlign 1
+        Padding 2 0 0 0
+        FillWeight 1
+       }
+       "Is Visible" 0
+       "Inherit Color" 1
+       {
+        ImageWidgetClass "{699D0E4984C8DB60}" {
+         Name "TypeBackground"
+         Slot OverlayWidgetSlot "{599ACE6775AB1524}" {
+          HorizontalAlign 3
+          VerticalAlign 3
+         }
+         Opacity 0.3
+         Size 0 0
+        }
+        FrameWidgetClass "{699D0E4984C8C991}" {
+         Name "TypeFrame"
+         Slot OverlayWidgetSlot "{599ACE65B54D9742}" {
+          Padding 4 2 4 2
+         }
+         Clipping True
+         {
+          RichTextWidgetClass "{699D0E4984C92709}" {
+           Name "TypeText3"
+           Slot FrameWidgetSlot "{599ACE65B57F9E0C}" {
+            OffsetLeft 0
+            OffsetTop 0
+            SizeX 0
+            OffsetRight 0
+            SizeY 0
+            OffsetBottom 0
+            SizeToContent 1
+           }
+           Color 0 0 0 1
+           Text ""
+           "Font Size" 16
+           "Min Font Size" 12
+           FontProperties FontProperties "{593899005F425640}" {
+            Font "{EABA4FE9D014CCEF}UI/Fonts/RobotoCondensed/RobotoCondensed_Bold.fnt"
+           }
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

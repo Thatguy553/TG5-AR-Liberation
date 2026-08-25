@@ -1,0 +1,24 @@
+SCR_BaseGameMode GameMode_Plain1 : "{1B76F75A3175E85C}Prefabs/MP/Modes/Plain/GameMode_Plain.et" {
+ components {
+  TG5_ObjectiveManagerComponent "{6A330723C59C85A8}" {
+  }
+  TG5_StartManagerComponent "{697E49E3F98B0D88}" {
+  }
+ }
+ coords 1869.864 127.939 7516.701
+}
+SCR_FactionManager FactionManager_USxUSSR1 : "{589540B35EBA8CDC}Prefabs/MP/Managers/Factions/FactionManager_USxUSSR.et" {
+ coords 1877.619 127.97 7528.361
+}
+SCR_SpawnPoint : "{5A2220DD0C16958B}Prefabs/MP/Spawning/SpawnPoint_US.et" {
+ coords 1876.479 128.007 7512.355
+}
+SCR_MapMarkerBaseMilitary : "{61C2EDFF383CCEA1}Prefabs/Markers/MapMarkerBaseMilitary.et" {
+ coords 11867.5 3.488 11096.75
+}
+SCR_LoadoutManager : "{97EF4C1A41F63DDB}Prefabs/MP/Managers/Loadouts/LoadoutManager_USxUSSR.et" {
+ coords 1867.704 127.969 7527.422
+}
+SCR_BaseTriggerEntity : "{D9130D20F5A6942F}Prefabs/Triggers/TG5_ObjectiveTriggerEntity.et" {
+ coords 11653.704 48.773 10343.095
+}

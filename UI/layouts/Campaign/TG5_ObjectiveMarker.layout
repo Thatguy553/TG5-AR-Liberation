@@ -1,0 +1,80 @@
+FrameWidgetClass {
+ Name "SpawnPoint"
+ "Z Order" 1
+ Clipping False
+ {
+  OverlayWidgetClass "{6A2814000A53A548}" {
+   Name "Overlay0"
+   Slot FrameWidgetSlot "{5A748248649ECD71}" {
+    Anchor 0.5 0.5 0.5 0.5
+    PositionX -9.255
+    OffsetLeft -9.255
+    PositionY 2.742
+    OffsetTop 2.742
+    SizeX 100
+    OffsetRight -90.745
+    SizeY 100
+    OffsetBottom -102.742
+    Alignment 0.5 0.5
+   }
+   {
+    SizeLayoutWidgetClass "{6A2814000A53A54F}" {
+     Name "SizeLayout"
+     Slot OverlayWidgetSlot "{5A7494430A5DF5B2}" {
+      HorizontalAlign 1
+      VerticalAlign 1
+     }
+     "Ignore Cursor" 0
+     AllowWidthOverride 1
+     WidthOverride 60
+     AllowHeightOverride 1
+     HeightOverride 60
+     {
+      OverlayWidgetClass "{6A2814000A53A54C}" {
+       Name "IconOverlay"
+       Slot AlignableSlot "{5A74824A63E50D09}" {
+        HorizontalAlign 3
+        VerticalAlign 3
+       }
+       {
+        TextWidgetClass "{6A2814000A523845}" {
+         Name "Name"
+         Slot OverlayWidgetSlot "{54D4BC2CF0FC90D0}" {
+          VerticalAlign 0
+          Padding 0 -12 0 0
+         }
+         Clipping False
+         Color 0 0 0 1
+         Text "#ar-deploymenu_spawnpoint_name"
+         "Font Size" 20
+         "Min Font Size" 20
+         "Horizontal Alignment" Center
+         FontProperties FontProperties "{54C883806AE51B80}" {
+          Font "{3E7733BAC8C831F6}UI/Fonts/RobotoCondensed/RobotoCondensed_Regular.fnt"
+          Bold 1
+          OutlineColor 0 0 0 1
+          ShadowSize 11
+          ShadowColor 1 1 1 1
+          ShadowOffset 1.1 1.6
+         }
+        }
+        ImageWidgetClass "{6A326DEEA5C1B49A}" {
+         Name "Image0"
+         Slot OverlayWidgetSlot "{6A326DEEA5C1B47D}" {
+         }
+         Size 50 50
+        }
+        TextWidgetClass "{6A32D7047AE60DAA}" {
+         Name "Type"
+         Slot OverlayWidgetSlot "{6A32D7047AE60D60}" {
+         }
+         "Is Visible" 0
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ }
+}

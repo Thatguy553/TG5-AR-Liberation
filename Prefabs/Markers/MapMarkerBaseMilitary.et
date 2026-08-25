@@ -1,0 +1,9 @@
+SCR_MapMarkerBaseMilitary {
+ ID "698B1D58E74CCBE8"
+ components {
+  RplComponent "{698B1D58E74CF8F5}" {
+  }
+ }
+ Flags 0 0x3
+ coords 9154.646 32.782 4943.347
+}

@@ -1,0 +1,7 @@
+SCR_BaseTriggerEntity {
+ ID "6A33537B1ECFC79D"
+ components {
+  Persistence "{6A33537B1ECFC773}" {
+  }
+ }
+}

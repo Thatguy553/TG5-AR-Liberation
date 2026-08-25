@@ -1,0 +1,8 @@
+GameProject {
+ ID "NewGamemodeTest"
+ GUID "697E41A7ED839EEF"
+ TITLE "New Gamemode Test"
+ Dependencies {
+  "58D0FB3206B6F859"
+ }
+}
