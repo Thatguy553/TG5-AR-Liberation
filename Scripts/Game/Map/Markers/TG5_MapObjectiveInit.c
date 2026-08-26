@@ -63,6 +63,20 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 	}
 
 	//------------------------------------------------------------------------------------------------
+	// Authority-safe variant: runs the same map descriptor gathering and
+	// classification WITHOUT creating markers, widgets, or subscribing to any
+	// map UI events. Used by the objective manager on dedicated servers, which
+	// need the objective list (positions/types) but have no map UI.
+	void GatherOnly()
+	{
+		GatherMapLocations();
+
+		BuildObjectiveObjects(m_aMapCities, OBJ_TYPE_CITY);
+		BuildObjectiveObjects(m_aMapVillages, OBJ_TYPE_VILLAGE);
+		BuildObjectiveObjects(m_aMapMilitary, OBJ_TYPE_MILITARY);
+	}
+
+	//------------------------------------------------------------------------------------------------
 	// Public API
 	//------------------------------------------------------------------------------------------------
 
@@ -72,6 +86,20 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 		if (!objectives || objectives.IsEmpty())
 			return;
 
+		array<ref TG5_ObjectiveObject> batch = BuildObjectiveObjects(objectives, objType);
+
+		EnsureOpenSubscription();
+
+		SCR_MapEntity mapEntity = SCR_MapEntity.GetMapInstance();
+		if (mapEntity && mapEntity.IsOpen())
+			BuildMarkers(batch); // map already open - build just this batch
+	}
+
+	//------------------------------------------------------------------------------------------------
+	// Wrap map items in objective objects and register them in the session
+	// list. No UI work - safe to call on a dedicated server.
+	protected array<ref TG5_ObjectiveObject> BuildObjectiveObjects(array<MapItem> objectives, string objType)
+	{
 		array<ref TG5_ObjectiveObject> batch = new array<ref TG5_ObjectiveObject>();
 
 		foreach (MapItem item : objectives)
@@ -84,11 +112,7 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 			batch.Insert(obj);
 		}
 
-		EnsureOpenSubscription();
-
-		SCR_MapEntity mapEntity = SCR_MapEntity.GetMapInstance();
-		if (mapEntity && mapEntity.IsOpen())
-			BuildMarkers(batch); // map already open - build just this batch
+		return batch;
 	}
 
 	//------------------------------------------------------------------------------------------------

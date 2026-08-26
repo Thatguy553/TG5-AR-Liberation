@@ -86,18 +86,26 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 	//------------------------------------------------------------------------------------------------
 	override void OnWorldPostProcess(World world)
 	{
-		// Client-only: build and initialize the map marker component.
-		// Dedicated servers (console app) have no map UI and skip this entirely.
-		if (!System.IsConsoleApp())
-		{
-			m_MapObjectives = new TG5_MapObjectiveInit();
-			m_MapObjectives.Initialize();
+		m_MapObjectives = new TG5_MapObjectiveInit();
 
-			array<ref TG5_ObjectiveObject> gathered = m_MapObjectives.GetObjectives();
-			foreach (TG5_ObjectiveObject obj : gathered)
-			{
-				RegisterObjective(obj);
-			}
+		if (System.IsConsoleApp())
+		{
+			// Dedicated server: no map UI exists. Gather the objective list
+			// (positions/types) without building any markers or subscribing
+			// to map events - the authority still needs objectives to
+			// garrison and evaluate captures against.
+			m_MapObjectives.GatherOnly();
+		}
+		else
+		{
+			// Client / listen server: full init with map markers
+			m_MapObjectives.Initialize();
+		}
+
+		array<ref TG5_ObjectiveObject> gathered = m_MapObjectives.GetObjectives();
+		foreach (TG5_ObjectiveObject obj : gathered)
+		{
+			RegisterObjective(obj);
 		}
 	}
 
@@ -106,12 +114,15 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 	{
 		super.OnGameModeStart();
 
-		// Capture evaluation is authority-only
+		// Capture evaluation and garrison spawning are authority-only
 		if (!IsServer())
 			return;
 
-		// TODO: spawn initial AI garrisons once objectives exist on the authority
-		// (see SpawnGarrison)
+		// Garrison every registered objective at game start
+		foreach (TG5_ObjectiveObject obj : m_aObjectives)
+		{
+			SpawnGarrison(obj);
+		}
 
 		GetGame().GetCallqueue().CallLater(EvaluateCaptures, m_fCaptureCheckInterval * 1000, true);
 	}
@@ -186,10 +197,6 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 		// Tally live characters per faction
 		m_aFactionCounts.Clear();
 
-		FactionManager factionManager = GetGame().GetFactionManager();
-		if (!factionManager)
-			return;
-
 		foreach (IEntity ent : m_aQueryResults)
 		{
 			FactionAffiliationComponent factionComp = FactionAffiliationComponent.Cast(ent.FindComponent(FactionAffiliationComponent));
@@ -217,7 +224,7 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 	// Sphere query callback - only live characters count toward presence
 	protected bool QueryCharacter(IEntity ent)
 	{
-		ChimeraCharacter character = ChimeraCharacter.Cast(ent);
+		SCR_ChimeraCharacter character = SCR_ChimeraCharacter.Cast(ent);
 		if (!character)
 			return true;
 
