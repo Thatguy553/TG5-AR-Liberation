@@ -119,10 +119,10 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 			return;
 
 		// Garrison every registered objective at game start
-		foreach (TG5_ObjectiveObject obj : m_aObjectives)
+		/*foreach (TG5_ObjectiveObject obj : m_aObjectives)
 		{
 			SpawnGarrison(obj);
-		}
+		}*/
 
 		GetGame().GetCallqueue().CallLater(EvaluateCaptures, m_fCaptureCheckInterval * 1000, true);
 	}
@@ -326,7 +326,7 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 	// Spawn a group at the objective and attach it as a defender.
 	// Pattern per vanilla ambient patrol spawner: SpawnEntityPrefabEx ->
 	// SCR_AIGroup.Cast -> SpawnUnits (if not immediate) -> AddWaypoint.
-	protected SCR_AIGroup SpawnGarrison(TG5_ObjectiveObject obj, ResourceName groupPrefab = "")
+	array<SCR_AIGroup> SpawnGarrison(TG5_ObjectiveObject obj, ResourceName groupPrefab = "")
 	{
 		if (!IsServer())
 			return null;
@@ -341,18 +341,25 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 		params.TransformMode = ETransformMode.WORLD;
 		params.Transform[3] = GetObjectivePos(obj);
 
-		SCR_AIGroup group = SCR_AIGroup.Cast(GetGame().SpawnEntityPrefabEx(groupPrefab, false, params: params));
-		if (!group)
-			return null;
+		array<SCR_AIGroup> groups = new array<SCR_AIGroup>();
+		for (int i = 0; i <= obj.GetInfGroupNum(); i++)
+		{
+			SCR_AIGroup group = SCR_AIGroup.Cast(GetGame().SpawnEntityPrefabEx(groupPrefab, false, params: params));
+			
+			if (!group)
+				return null;
 
-		if (!group.GetSpawnImmediately())
-			group.SpawnUnits();
+			if (!group.GetSpawnImmediately())
+				group.SpawnUnits();
+			
+			groups.Insert(group);
+		}
 
-		obj.AddAiGroup(group);
+		obj.AddAiGroup(groups);
 
 		// TODO: attach a defend waypoint at the objective position once the
 		// waypoint prefab resource is configured, e.g. group.AddWaypoint(wp)
 
-		return group;
+		return groups;
 	}
 }

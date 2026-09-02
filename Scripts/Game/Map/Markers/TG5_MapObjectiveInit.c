@@ -108,11 +108,30 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 			obj.SetObjType(objType);
 			obj.SetObjMapItem(item);
 			obj.SetObjEntity(item.Entity()); // may be null for pure name-descriptor items
+			TG5_ObjectiveTriggerEntity trig = BuildObjectiveTrigger(obj);
+			
+			obj.SetTrigger(trig);
+			
 			m_aAllObjectives.Insert(obj);
 			batch.Insert(obj);
 		}
 
 		return batch;
+	}
+	
+	//------------------------------------------------------------------------------------------------
+	// Spawn the trigger entity and return it
+	// 
+	protected TG5_ObjectiveTriggerEntity BuildObjectiveTrigger(TG5_ObjectiveObject obj)
+	{
+		EntitySpawnParams params = EntitySpawnParams();
+		params.TransformMode = ETransformMode.WORLD;
+		params.Transform[3] = obj.GetObjEntity().GetOrigin();
+		
+		ResourceName trigger = "{D9130D20F5A6942F}Prefabs/Triggers/TG5_ObjectiveTriggerEntity.et";
+		
+		IEntity ent = GetGame().SpawnEntityPrefabEx(trigger, false, null, params: params);
+		return TG5_ObjectiveTriggerEntity.Cast(ent);
 	}
 
 	//------------------------------------------------------------------------------------------------
