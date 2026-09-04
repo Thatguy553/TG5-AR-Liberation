@@ -50,9 +50,12 @@ class TG5_CaptureUIComponent
 		if (!obj)
 			return;
 
+		Print("[TG5_CaptureUI] OnCaptureProgress called - Obj: " + obj.GetDisplayName() + " Progress: " + progress + " Capturing: " + obj.IsBeingCaptured());
+
 		// If not being captured, remove progress bar
 		if (!obj.IsBeingCaptured() || progress <= 0.0)
 		{
+			Print("[TG5_CaptureUI] Removing progress bar - not being captured");
 			RemoveCaptureProgress(obj);
 			return;
 		}
@@ -67,21 +70,38 @@ class TG5_CaptureUIComponent
 	{
 		Widget progressWidget = obj.GetCaptureProgressWidget();
 		
+		string widgetExistsStatus;
+		if (progressWidget != null)
+			widgetExistsStatus = "1";
+		else
+			widgetExistsStatus = "0";
+		Print("[TG5_CaptureUI] UpdateCaptureProgress - Widget exists: " + widgetExistsStatus);
+		
 		// Create widget if it doesn't exist
 		if (!progressWidget)
 		{
-			progressWidget = CreateCaptureProgressWidget(obj);
+			Print("[TG5_CaptureUI] Creating new progress widget");
+			progressWidget = CreateWorkspaceWidget(obj);
 			if (!progressWidget)
 				return;
 			
 			obj.SetCaptureProgressWidget(progressWidget);
 		}
 
+		// Ensure widget is visible
+		progressWidget.SetVisible(true);
+		Print("[TG5_CaptureUI] Widget set to visible");
+
 		// Update progress bar fill
 		ProgressBarWidget progressBar = ProgressBarWidget.Cast(progressWidget.FindAnyWidget("ProgressBarTop"));
 		if (progressBar)
 		{
 			progressBar.SetCurrent(progress);
+			Print("[TG5_CaptureUI] Progress bar set to: " + progress);
+		}
+		else
+		{
+			Print("[TG5_CaptureUI] ProgressBarTop widget not found!");
 		}
 
 		// Update objective name
@@ -89,50 +109,52 @@ class TG5_CaptureUIComponent
 		if (objName)
 		{
 			objName.SetText(obj.GetDisplayName());
+			objName.SetColor(Color.DarkRed);
+			Print("[TG5_CaptureUI] Objective name set to: " + obj.GetDisplayName());
+		}
+		else
+		{
+			Print("[TG5_CaptureUI] ObjName widget not found!");
 		}
 
 		// Color based on capturing faction
 		ImageWidget progressBarBot = ImageWidget.Cast(progressWidget.FindAnyWidget("ProgressBarBot"));
 		if (progressBarBot)
 		{
-			Color factionColor = GetFactionColor(capturingFaction);
-			progressBarBot.SetColor(factionColor);
+			progressBarBot.SetColor(Color.DarkRed);
 		}
 
 		// Also update the progress bar fill color
-		ProgressBarWidget progressBar = ProgressBarWidget.Cast(progressWidget.FindAnyWidget("ProgressBarTop"));
-		if (progressBar)
+		ProgressBarWidget progressBarTop = ProgressBarWidget.Cast(progressWidget.FindAnyWidget("ProgressBarTop"));
+		if (progressBarTop)
 		{
-			Color factionColor = GetFactionColor(capturingFaction);
-			progressBar.SetColor(factionColor);
+			progressBarTop.SetColor(Color.DarkBlue);
 		}
 	}
 
 	//------------------------------------------------------------------------------------------------
-	// Create the capture progress widget
-	protected Widget CreateCaptureProgressWidget(TG5_ObjectiveObject obj)
+	// Fallback: Create widget using workspace approach
+	protected Widget CreateWorkspaceWidget(TG5_ObjectiveObject obj)
 	{
 		WorkspaceWidget workspace = GetGame().GetWorkspace();
 		if (!workspace)
+		{
+			Print("[TG5_CaptureUI] Workspace not available");
 			return null;
+		}
+
+		Print("[TG5_CaptureUI] Creating widget with workspace approach...");
 
 		Widget progressWidget = workspace.CreateWidgets(m_sCaptureProgressLayout);
 		if (!progressWidget)
-			return null;
+		{
+			Print("[TG5_CaptureUI] Failed to create progress widget");
+		}
 
-		// Position in bottom-right corner of screen as HUD element
-		FrameSlot.SetAnchorMin(progressWidget, 1, 1);
-		FrameSlot.SetAnchorMax(progressWidget, 1, 1);
-		FrameSlot.SetAlignment(progressWidget, 1, 1);
-		
-		// Set position with some padding from screen edges
-		int screenWidth, screenHeight;
-		workspace.GetScreenSize(screenWidth, screenHeight);
-		
-		float paddingX = 20.0;  // Padding from right edge
-		float paddingY = 100.0; // Padding from bottom edge
-		
-		FrameSlot.SetPos(progressWidget, -paddingX, -paddingY);
+		Print("[TG5_CaptureUI] Progress widget created for objective: " + obj.GetDisplayName());
+
+		// Ensure widget is visible
+		Print("[TG5_CaptureUI] Widget visibility set to true");
 
 		return progressWidget;
 	}
@@ -164,7 +186,7 @@ class TG5_CaptureUIComponent
 		if (!factionManager)
 			return;
 
-		Faction playerFaction = factionManager.GetPlayerFaction();
+		Faction playerFaction = factionManager.GetFactionByKey(newOwner);
 		if (!playerFaction)
 			return;
 
@@ -263,6 +285,21 @@ class TG5_CaptureUIComponent
 			return Color.White;
 
 		return faction.GetFactionColor();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	// Position a widget on the map at world coordinates
+	protected void PositionMarker(Widget w, vector worldPos)
+	{
+		SCR_MapEntity mapEntity = SCR_MapEntity.GetMapInstance();
+		if (!mapEntity)
+			return;
+
+		int screenX, screenY;
+		mapEntity.WorldToScreen(worldPos[0], worldPos[2], screenX, screenY, true);
+
+		WorkspaceWidget workspace = GetGame().GetWorkspace();
+		FrameSlot.SetPos(w, workspace.DPIUnscale(screenX), workspace.DPIUnscale(screenY));
 	}
 
 	//------------------------------------------------------------------------------------------------

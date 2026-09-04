@@ -1,78 +1,67 @@
 FrameWidgetClass {
  Name "CaptureProgress"
  {
-  OverlayWidgetClass "{6A48CB8B51458164}" {
-   Name "Background"
-   Slot FrameWidgetSlot "{6A48CB8B5145813C}" {
+  ImageWidgetClass "{6A48CB8CF22216F7}" {
+   Name "Image0"
+   Slot FrameWidgetSlot "{6A48CB8CF22216D7}" {
     Anchor 0 0 0 0
-    PositionX 0
-    OffsetLeft 0
-    PositionY 0
-    OffsetTop 0
+    PositionX 1608
+    OffsetLeft 1608
+    PositionY 152
+    OffsetTop 152
     SizeX 308
-    OffsetRight -308
+    OffsetRight -1916
     SizeY 81
-    OffsetBottom -81
+    OffsetBottom -233
    }
-   Color 0 0 0 1
-   {
-    ImageWidgetClass "{6A48CB8CF22216F7}" {
-     Name "Image0"
-     Slot OverlayWidgetSlot "{6A48CB8CF22216D7}" {
-     }
-     Color 0 0 0 0.75
-     Size 308 81
-    }
-   }
+   Color 0 0 0 0.75
   }
-  ImageWidgetClass "{6A48CB8DD0BE4B91}" {
+  ImageWidgetClass "{6A49277889F646AE}" {
    Name "ProgressBarBot"
-   Slot FrameWidgetSlot "{6A48CB8DD0BE4B7D}" {
-    Anchor 0 0 0 0
-    PositionX 8
-    OffsetLeft 8
-    PositionY 40
-    OffsetTop 40
-    SizeX 292
-    OffsetRight -8
-    SizeY 27
-    OffsetBottom -14
-   }
-   Color 0.4706 0.0053 0.0053 1
-  }
-  ProgressBarWidgetClass "{6A48CB8CB1A6ECEB}" {
-   Name "ProgressBarTop"
-   Slot FrameWidgetSlot "{6A48CB8CB1A6ECCD}" {
-    Anchor 0 0 0 0
-    PositionX 8
-    OffsetLeft 8
-    PositionY 39
-    OffsetTop 39
-    SizeX 292
-    OffsetRight -8
+   Slot FrameWidgetSlot "{6A49277889F6468B}" {
+    PositionX 1608
+    OffsetLeft 1608
+    PositionY 192
+    OffsetTop 192
+    SizeX 308
+    OffsetRight -1916
     SizeY 30
-    OffsetBottom -12
+    OffsetBottom -222
    }
-   Color 0.0024 0.0352 0.5356 1
-   style SimpleOutline
+   Color 0.5686 0 0 1
+   "Transition width" 0.46
+  }
+  ProgressBarWidgetClass "{6A492778B65470B1}" {
+   Name "ProgressBarTop"
+   Slot FrameWidgetSlot "{6A492778B6547093}" {
+    PositionX 1608
+    OffsetLeft 1608
+    PositionY 192
+    OffsetTop 192
+    SizeX 304
+    OffsetRight -1912
+    SizeY 30
+    OffsetBottom -222
+   }
+   Color 0 0.1559 0.7607 1
+   Maximum 1
+   Current 0.1
    "Draw Background" 0
   }
-  RichTextWidgetClass "{6A48CB8DEF13F476}" {
+  RichTextWidgetClass "{6A492778A1D7A55B}" {
    Name "ObjName"
-   Slot FrameWidgetSlot "{6A48CB8DEF13F457}" {
-    Anchor 0 0 0 0
-    PositionX 8
-    OffsetLeft 8
-    PositionY 8
-    OffsetTop 8
-    SizeX 292
-    OffsetRight -8
+   Slot FrameWidgetSlot "{6A492778A1D7A538}" {
+    PositionX 1608
+    OffsetLeft 1608
+    PositionY 160
+    OffsetTop 160
+    SizeX 304
+    OffsetRight -1912
     SizeY 30
-    OffsetBottom -43
+    OffsetBottom -190
    }
-   Color 1 1 1 1
+   Color 0.5686 0 0 1
    "Horizontal Alignment" Right
-   "Vertical Alignment" Center
   }
  }
 }
