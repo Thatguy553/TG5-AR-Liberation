@@ -3,7 +3,7 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 {
 	// Objective type identifiers - used as the key for icon lookup in GetIconForType
 	static const string OBJ_TYPE_CITY = "city";
-	static const string OBJ_TYPE_VILLAGE = "village";
+	static const string OBJ_TYPE_TOWN = "town";
 	static const string OBJ_TYPE_MILITARY = "military";
 	static const string OBJ_TYPE_RADIO = "radio";
 	static const string OBJ_TYPE_FACTORY = "factory";
@@ -58,7 +58,7 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 	{
 		GatherMapLocations();
 		AddObjectiveMark(m_aMapCities, OBJ_TYPE_CITY);
-		AddObjectiveMark(m_aMapVillages, OBJ_TYPE_VILLAGE);
+		AddObjectiveMark(m_aMapTowns, OBJ_TYPE_TOWN);
 		AddObjectiveMark(m_aMapMilitary, OBJ_TYPE_MILITARY);
 	}
 
@@ -72,7 +72,7 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 		GatherMapLocations();
 
 		BuildObjectiveObjects(m_aMapCities, OBJ_TYPE_CITY);
-		BuildObjectiveObjects(m_aMapVillages, OBJ_TYPE_VILLAGE);
+		BuildObjectiveObjects(m_aMapTowns, OBJ_TYPE_TOWN);
 		BuildObjectiveObjects(m_aMapMilitary, OBJ_TYPE_MILITARY);
 	}
 
@@ -126,7 +126,7 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 	protected TG5_ObjectiveTriggerEntity BuildObjectiveTrigger(TG5_ObjectiveObject obj)
 	{
 		vector pos = GetObjectivePos(obj); // MapItem pos, falling back to entity origin
-		EntitySpawnParams params = EntitySpawnParams();
+		EntitySpawnParams params = new EntitySpawnParams();
 		params.TransformMode = ETransformMode.WORLD;
 		params.Transform[3] = pos;
 		
@@ -309,7 +309,7 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 		switch (objType)
 		{
 			case OBJ_TYPE_CITY: return m_sImgCity;
-			case OBJ_TYPE_VILLAGE: return m_sImgTown;
+			case OBJ_TYPE_TOWN: return m_sImgTown;
 			case OBJ_TYPE_MILITARY: return m_sImgMilitary;
 			case OBJ_TYPE_RADIO: return m_sImgRadio;
 			case OBJ_TYPE_FACTORY: return m_sImgFactory;
@@ -436,15 +436,15 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 		FilterGenericLocations(mapEntity, m_aMapGenerics, filteredCity, filteredVillage, filteredMilitary);
 
 		m_aMapCities.InsertAll(filteredCity);
-		m_aMapVillages.InsertAll(filteredVillage);
+		m_aMapTowns.InsertAll(filteredVillage);
 		m_aMapMilitary.InsertAll(filteredMilitary);
 
-		DebugLog(string.Format("[GatherMapLocations] Cities: %1 | Villages: %2 | Military: %3",
-			m_aMapCities.Count(), m_aMapVillages.Count(), m_aMapMilitary.Count()));
+		DebugLog(string.Format("[GatherMapLocations] Cities: %1 | Towns: %2 | Military: %3",
+			m_aMapCities.Count(), m_aMapTowns.Count(), m_aMapMilitary.Count()));
 	}
 
 	//------------------------------------------------------------------------------------------------
-	protected void FilterGenericLocations(MapEntity mapEnt, array<MapItem> mapItems, out array<MapItem> city, out array<MapItem> village, out array<MapItem> military)
+	protected void FilterGenericLocations(MapEntity mapEnt, array<MapItem> mapItems, out array<MapItem> city, out array<MapItem> town, out array<MapItem> military)
 	{
 		float searchRadius = 300.0;
 
@@ -455,7 +455,7 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 			string mapName = item.GetDisplayName();
 			DebugLog("[Filter] Checking Location: " + mapName);
 
-			GetGame().GetWorld().QueryEntitiesBySphere(item.GetPos(), searchRadius, AddBuildingEntity, null, EQueryEntitiesFlags.ALL);
+			GetGame().GetWorld().QueryEntitiesBySphere(item.GetPos(), searchRadius, AddBuildingEntity, null, EQueryEntitiesFlags.STATIC);
 
 			if (mapName.Contains("Military"))
 			{
@@ -475,8 +475,8 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 
 			if (buildingCount >= 4 && buildingCount <= 10)
 			{
-				DebugLog("[Filter] Village Inserted");
-				village.Insert(item);
+				DebugLog("[Filter] Town Inserted");
+				town.Insert(item);
 				continue;
 			}
 
@@ -486,7 +486,7 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 
 	//------------------------------------------------------------------------------------------------
 	// Sphere query callback - only destructible buildings count toward the
-	// city/village classification; trees, vehicles, characters etc. are ignored
+	// city/Town classification; trees, vehicles, characters etc. are ignored
 	bool AddBuildingEntity(IEntity ent)
 	{
 		if (SCR_DestructibleBuildingEntity.Cast(ent))

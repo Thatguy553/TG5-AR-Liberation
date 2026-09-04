@@ -337,17 +337,17 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 		if (groupPrefab.IsEmpty())
 			return null;
 
-		EntitySpawnParams params = EntitySpawnParams();
+		EntitySpawnParams params = new EntitySpawnParams();
 		params.TransformMode = ETransformMode.WORLD;
 		params.Transform[3] = GetObjectivePos(obj);
 
 		array<SCR_AIGroup> groups = new array<SCR_AIGroup>();
-		for (int i = 0; i <= obj.GetInfGroupNum(); i++)
+		for (int i = 0; i < obj.GetInfGroupNum(); i++)
 		{
 			SCR_AIGroup group = SCR_AIGroup.Cast(GetGame().SpawnEntityPrefabEx(groupPrefab, false, params: params));
 			
 			if (!group)
-				return null;
+				break;
 
 			if (!group.GetSpawnImmediately())
 				group.SpawnUnits();

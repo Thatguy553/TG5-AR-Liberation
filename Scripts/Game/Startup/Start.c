@@ -18,4 +18,9 @@ class TG5_StartManagerComponent : SCR_BaseGameModeComponent
 	{
 		super.OnPostInit(owner);
 	}
+	
+	override void OnGameEnd()
+	{
+	
+	}
 }

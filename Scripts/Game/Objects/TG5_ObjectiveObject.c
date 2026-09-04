@@ -10,6 +10,8 @@ class TG5_ObjectiveObject
 	
 	protected int m_iInfGroupNum = 0;
 	protected int m_iVehNum = 0;
+	[Attribute(defvalue: "150", desc: "Radius (m) around an objective within which faction presence is evaluated.", category: "Objectives")]
+	protected float m_fCaptureRadius;
 	
 	protected bool m_bActive = false;
 	
@@ -98,6 +100,7 @@ class TG5_ObjectiveObject
 	
 		m_tTrigger.GetOnActivate().Insert(Activate);
 		m_tTrigger.GetOnDeactivate().Insert(DeActivate);
+		m_tTrigger.SetSphereRadius(m_fCaptureRadius);
 	}
 	
 	void TG5_ObjectiveObject()

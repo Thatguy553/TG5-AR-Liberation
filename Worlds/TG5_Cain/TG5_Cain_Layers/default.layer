@@ -5,8 +5,6 @@ SCR_BaseGameMode GameMode_Plain1 : "{1B76F75A3175E85C}Prefabs/MP/Modes/Plain/Gam
  components {
   TG5_ObjectiveManagerComponent "{6A330723C59C85A8}" {
   }
-  TG5_ObjectiveManagerComponent "{6A44AEB93AE07D6B}" {
-  }
   TG5_StartManagerComponent "{697E49E3F98B0D88}" {
   }
  }
