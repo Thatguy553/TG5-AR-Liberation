@@ -1,0 +1,112 @@
+FrameWidgetClass {
+ Name "rootFrame"
+ {
+  FrameWidgetClass "{6A48CB8F08083651}" {
+   Name "Frame0"
+   Slot FrameWidgetSlot "{6A48CB8D3718C366}" {
+    Anchor 0.5 0.5 0.5 0.5
+    PositionX -240
+    OffsetLeft -240
+    PositionY -316
+    OffsetTop -316
+    SizeX 512
+    OffsetRight -272
+    SizeY 119.4
+    OffsetBottom 196.6
+   }
+   {
+    ImageWidgetClass "{6A48CB8F08083654}" {
+     Name "TitleBackground"
+     Slot FrameWidgetSlot "{6A48CB8EAA769EEE}" {
+      PositionX 0
+      OffsetLeft 0
+      PositionY 0
+      OffsetTop 0
+      SizeX 512
+      OffsetRight -512
+      SizeY 32
+      OffsetBottom -32
+     }
+     Color 0 0 0 0.9187
+    }
+    RichTextWidgetClass "{6A48CB8F08083655}" {
+     Name "Title"
+     Slot FrameWidgetSlot "{6A48CB8E0F2EEE1B}" {
+      PositionX 8
+      OffsetLeft 8
+      PositionY 0
+      OffsetTop 0
+      SizeX 504
+      OffsetRight -512
+      SizeY 30
+      OffsetBottom -30
+     }
+     Text "SECTOR LOST"
+     "Vertical Alignment" Center
+    }
+    ImageWidgetClass "{6A48CB8F08083656}" {
+     Name "IconBackground"
+     Slot FrameWidgetSlot "{6A48CB8E55C70D38}" {
+      PositionX 0
+      OffsetLeft 0
+      PositionY 40
+      OffsetTop 40
+      SizeX 80
+      OffsetRight -80
+      SizeY 80
+      OffsetBottom -120
+     }
+     Color 0 0 0 0.8125
+    }
+    ImageWidgetClass "{6A48CB8F08083657}" {
+     Name "MessageBackground"
+     Slot FrameWidgetSlot "{6A48CB8E54B841EF}" {
+      PositionX 88
+      OffsetLeft 88
+      PositionY 40
+      OffsetTop 40
+      SizeX 428
+      OffsetRight -516
+      SizeY 78
+      OffsetBottom -118
+     }
+     Color 0 0 0 0.8125
+    }
+    RichTextWidgetClass "{6A48CB8F08083649}" {
+     Name "Message"
+     Slot FrameWidgetSlot "{6A48CB8FD8C13E00}" {
+      PositionX 96
+      OffsetLeft 96
+      PositionY 56
+      OffsetTop 56
+      SizeX 408
+      OffsetRight -504
+      SizeY 48
+      OffsetBottom -104
+     }
+     Color 0.4706 0.0053 0.0053 1
+     Text "Enemy forces have captured %1"
+     "Font Size" 30
+     "Vertical Alignment" Center
+    }
+    ImageWidgetClass "{6A48CB8F0809A443}" {
+     Name "Icon"
+     Slot FrameWidgetSlot "{6A48CB8F97B87E45}" {
+      PositionX 0
+      OffsetLeft 0
+      PositionY 40
+      OffsetTop 40
+      SizeX 80
+      OffsetRight -80
+      SizeY 80
+      OffsetBottom -120
+     }
+     Color 0.4706 0.0053 0.0053 1
+     Texture "{5B191F19814408B3}UI/Imagesets/SupportStations/Notifications.imageset"
+     Image "repair-1"
+     Size 128 128
+    }
+   }
+  }
+ }
+}

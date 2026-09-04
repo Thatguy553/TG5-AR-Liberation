@@ -1,0 +1,74 @@
+FrameWidgetClass {
+ Name "CaptureProgress"
+ {
+  OverlayWidgetClass "{6A48CB8B51458164}" {
+   Name "Background"
+   Slot FrameWidgetSlot "{6A48CB8B5145813C}" {
+    PositionX 1610.57
+    OffsetLeft 1610.57
+    PositionY 263.169
+    OffsetTop 263.169
+    SizeX 308.46
+    OffsetRight -1919.03
+    SizeY 81.258
+    OffsetBottom -344.427
+   }
+   Color 0 0 0 1
+   {
+    ImageWidgetClass "{6A48CB8CF22216F7}" {
+     Name "Image0"
+     Slot OverlayWidgetSlot "{6A48CB8CF22216D7}" {
+     }
+     Color 0 0 0 0.9375
+     Size 308 81
+    }
+   }
+  }
+  ImageWidgetClass "{6A48CB8DD0BE4B91}" {
+   Name "ProgressBarBot"
+   Slot FrameWidgetSlot "{6A48CB8DD0BE4B7D}" {
+    PositionX 1619.17
+    OffsetLeft 1619.17
+    PositionY 302.814
+    OffsetTop 302.814
+    SizeX 292.85
+    OffsetRight -1912.02
+    SizeY 27.34
+    OffsetBottom -330.153
+   }
+   Color 0.4706 0.0053 0.0053 1
+  }
+  ProgressBarWidgetClass "{6A48CB8CB1A6ECEB}" {
+   Name "ProgressBarTop"
+   Slot FrameWidgetSlot "{6A48CB8CB1A6ECCD}" {
+    PositionX 1618.67
+    OffsetLeft 1618.67
+    PositionY 301.706
+    OffsetTop 301.706
+    SizeX 293.074
+    OffsetRight -1911.74
+    SizeY 30
+    OffsetBottom -331.706
+   }
+   Color 0.0024 0.0352 0.5356 1
+   style SimpleOutline
+   "Draw Background" 0
+  }
+  RichTextWidgetClass "{6A48CB8DEF13F476}" {
+   Name "ObjName"
+   Slot FrameWidgetSlot "{6A48CB8DEF13F457}" {
+    PositionX 1620.45
+    OffsetLeft 1620.45
+    PositionY 267.815
+    OffsetTop 267.815
+    SizeX 292.047
+    OffsetRight -1912.5
+    SizeY 30
+    OffsetBottom -297.815
+   }
+   Color 0.4706 0.0053 0.0053 1
+   "Horizontal Alignment" Right
+   "Vertical Alignment" Center
+  }
+ }
+}
