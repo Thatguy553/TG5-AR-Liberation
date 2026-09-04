@@ -108,9 +108,10 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 			obj.SetObjType(objType);
 			obj.SetObjMapItem(item);
 			obj.SetObjEntity(item.Entity()); // may be null for pure name-descriptor items
-			TG5_ObjectiveTriggerEntity trig = BuildObjectiveTrigger(obj);
 			
+			TG5_ObjectiveTriggerEntity trig = BuildObjectiveTrigger(obj);
 			obj.SetTrigger(trig);
+			obj.BindTrigger();
 			
 			m_aAllObjectives.Insert(obj);
 			batch.Insert(obj);
@@ -124,9 +125,10 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 	// 
 	protected TG5_ObjectiveTriggerEntity BuildObjectiveTrigger(TG5_ObjectiveObject obj)
 	{
+		vector pos = GetObjectivePos(obj); // MapItem pos, falling back to entity origin
 		EntitySpawnParams params = EntitySpawnParams();
 		params.TransformMode = ETransformMode.WORLD;
-		params.Transform[3] = obj.GetObjEntity().GetOrigin();
+		params.Transform[3] = pos;
 		
 		ResourceName trigger = "{D9130D20F5A6942F}Prefabs/Triggers/TG5_ObjectiveTriggerEntity.et";
 		

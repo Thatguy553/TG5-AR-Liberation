@@ -11,6 +11,8 @@ class TG5_ObjectiveObject
 	protected int m_iInfGroupNum = 0;
 	protected int m_iVehNum = 0;
 	
+	protected bool m_bActive = false;
+	
 	protected TG5_ObjectiveManagerComponent m_cObjMngr;
 
 	// Current controlling faction, set authoritatively by the objective
@@ -75,20 +77,31 @@ class TG5_ObjectiveObject
 	
 	void Activate()
 	{
-		Print(m_sObjType);
-		Print("Activating");
-		m_cObjMngr.SpawnGarrison(this);
+		if (!m_bActive)
+		{
+			Print(string.Format("[Sector Activating] %1", m_mObjMapItem.GetDisplayName()));
+			m_cObjMngr.SpawnGarrison(this);
+			m_bActive = true;
+		}
 	}
 	
 	void DeActivate()
 	{
-		
+		m_bActive = false;
+	}
+	
+	// TG5_ObjectiveObject
+	void BindTrigger()
+	{
+		if (!m_tTrigger)
+			return;
+	
+		m_tTrigger.GetOnActivate().Insert(Activate);
+		m_tTrigger.GetOnDeactivate().Insert(DeActivate);
 	}
 	
 	void TG5_ObjectiveObject()
 	{
 		m_cObjMngr = TG5_ObjectiveManagerComponent.GetInstance();
-		m_tTrigger.GetOnActivate().Insert(Activate);
-		m_tTrigger.GetOnDeactivate().Insert(DeActivate);
 	}
 }

@@ -17,4 +17,11 @@ class TG5_ObjectiveTriggerEntity : SCR_BaseTriggerEntity
 		// Player only - ignore AI. Swap this check if AI should also trigger it.
 		return EntityUtils.IsPlayer(ent);
 	}
+	
+	override ScriptInvoker GetOnActivate()
+	{
+		Print("[GetOnActivate] Activating");
+		super.GetOnActivate();
+		return m_OnActivate;
+	}
 }

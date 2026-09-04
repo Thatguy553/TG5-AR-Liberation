@@ -4,4 +4,10 @@ TG5_ObjectiveTriggerEntity {
   Persistence "{6A33537B1ECFC773}" {
   }
  }
+ TriggerShapeType Sphere
+ SphereRadius 150
+ DrawShape 0
+ TriggerActivationType "All changes"
+ PeriodicQueries 1
+ UpdatePeriod 5
 }
