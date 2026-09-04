@@ -10,6 +10,10 @@ void TG5_OnObjectivesReadyDelegate();
 typedef func TG5_OnObjectivesReadyDelegate;
 typedef ScriptInvokerBase<TG5_OnObjectivesReadyDelegate> TG5_OnObjectivesReadyInvoker;
 
+void TG5_OnCaptureProgressDelegate(TG5_ObjectiveObject obj, float progress, FactionKey capturingFaction);
+typedef func TG5_OnCaptureProgressDelegate;
+typedef ScriptInvokerBase<TG5_OnCaptureProgressDelegate> TG5_OnCaptureProgressInvoker;
+
 //------------------------------------------------------------------------------------------------
 [ComponentEditorProps(category: "GameScripted/Callsign", description: "Authoritative manager for objectives: state, capture logic, and AI garrison spawning.")]
 class TG5_ObjectiveManagerComponentClass : SCR_BaseGameModeComponentClass
@@ -50,6 +54,12 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 	[Attribute(defvalue: "40", desc: "Minimum spacing (m) between garrison groups within one objective.", category: "Objectives", params: "0 200 1")]
 	protected float m_fGarrisonGroupSpacing;
 
+	[Attribute(defvalue: "10", desc: "Seconds required to capture an objective when uncontested.", category: "Objectives", params: "1 60 1")]
+	protected float m_fCaptureTime;
+
+	[Attribute(defvalue: "0.1", desc: "Capture progress increment per check interval.", category: "Objectives", params: "0.01 1.0 0.01")]
+	protected float m_fCaptureProgressIncrement;
+
 	// How many random spots to try before giving up on placing a group
 	protected static const int GARRISON_PLACEMENT_ATTEMPTS = 12;
 
@@ -67,6 +77,7 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 	protected ref TG5_OnObjectiveCapturedInvoker m_OnObjectiveCaptured = new TG5_OnObjectiveCapturedInvoker();
 	protected ref TG5_OnObjectiveContestedInvoker m_OnObjectiveContested = new TG5_OnObjectiveContestedInvoker();
 	protected ref TG5_OnObjectivesReadyInvoker m_OnObjectivesReady = new TG5_OnObjectivesReadyInvoker();
+	protected ref TG5_OnCaptureProgressInvoker m_OnCaptureProgress = new TG5_OnCaptureProgressInvoker();
 
 	// Marker rendering only. Never created on a dedicated server, which has no
 	// map UI - the objective list itself lives here, not in the map component.
@@ -101,6 +112,12 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 	TG5_OnObjectivesReadyInvoker GetOnObjectivesReady()
 	{
 		return m_OnObjectivesReady;
+	}
+
+	//------------------------------------------------------------------------------------------------
+	TG5_OnCaptureProgressInvoker GetOnCaptureProgress()
+	{
+		return m_OnCaptureProgress;
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -355,7 +372,15 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 		m_aQueryResults.Clear();
 		trigger.GetEntitiesInside(m_aQueryResults);
 		if (m_aQueryResults.IsEmpty())
+		{
+			// No one present - reset capture progress
+			if (obj.IsBeingCaptured())
+			{
+				obj.ResetCaptureState();
+				Rpc(RpcDo_CaptureProgressBroadcast, obj.GetId(), 0.0, -1, false);
+			}
 			return;
+		}
 
 		m_aFactionCounts.Clear();
 
@@ -378,20 +403,56 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 
 		Faction dominant = GetDominantFaction();
 		if (!dominant || dominant.GetFactionKey() == obj.GetOwningFaction())
-			return;
-
-		// Anyone else on the ground blocks the capture. This is where the
-		// capture timer and reinforcement call will hook in.
-		if (IsContested())
 		{
-			m_OnObjectiveContested.Invoke(obj, dominant.GetFactionKey());
+			// No dominant faction or owner is dominant - reset capture progress
+			if (obj.IsBeingCaptured())
+			{
+				obj.ResetCaptureState();
+				Rpc(RpcDo_CaptureProgressBroadcast, obj.GetId(), 0.0, -1, false);
+			}
 			return;
 		}
 
-		// Authority applies the change locally, then broadcasts it
-		FactionKey oldOwner = obj.GetOwningFaction();
-		ApplyCapture(obj, dominant.GetFactionKey(), oldOwner);
-		Rpc(RpcDo_CaptureBroadcast, obj.GetId(), FactionKeyToIndex(dominant.GetFactionKey()), FactionKeyToIndex(oldOwner));
+		// Anyone else on the ground blocks the capture
+		if (IsContested())
+		{
+			obj.SetContested(true);
+			m_OnObjectiveContested.Invoke(obj, dominant.GetFactionKey());
+			
+			// Reset progress if contested
+			if (obj.IsBeingCaptured())
+			{
+				obj.ResetCaptureState();
+				Rpc(RpcDo_CaptureProgressBroadcast, obj.GetId(), 0.0, -1, false);
+			}
+			return;
+		}
+
+		// Start or continue capture progress
+		obj.SetContested(false);
+		obj.SetBeingCaptured(true);
+		obj.SetCapturingFaction(dominant.GetFactionKey());
+
+		// Increment capture progress
+		float currentProgress = obj.GetCaptureProgress();
+		float newProgress = currentProgress + m_fCaptureProgressIncrement;
+		
+		if (newProgress >= 1.0)
+		{
+			// Capture complete
+			newProgress = 1.0;
+			FactionKey oldOwner = obj.GetOwningFaction();
+			ApplyCapture(obj, dominant.GetFactionKey(), oldOwner);
+			obj.ResetCaptureState();
+			Rpc(RpcDo_CaptureBroadcast, obj.GetId(), FactionKeyToIndex(dominant.GetFactionKey()), FactionKeyToIndex(oldOwner));
+		}
+		else
+		{
+			// Capture in progress
+			obj.SetCaptureProgress(newProgress);
+			Rpc(RpcDo_CaptureProgressBroadcast, obj.GetId(), newProgress, FactionKeyToIndex(dominant.GetFactionKey()), true);
+			m_OnCaptureProgress.Invoke(obj, newProgress, dominant.GetFactionKey());
+		}
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -465,6 +526,7 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 	protected void ApplyCapture(TG5_ObjectiveObject obj, FactionKey newOwner, FactionKey oldOwner)
 	{
 		obj.SetOwningFaction(newOwner);
+		obj.ResetCaptureState(); // Reset capture state when capture completes
 		m_OnObjectiveCaptured.Invoke(obj, newOwner, oldOwner);
 	}
 
@@ -500,6 +562,25 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 			return;
 
 		ApplyCapture(obj, newOwner, IndexToFactionKey(oldOwnerIndex));
+	}
+
+	//------------------------------------------------------------------------------------------------
+	// Broadcast capture progress updates to all clients for UI progress bar
+	[RplRpc(RplChannel.Reliable, RplRcver.Broadcast)]
+	protected void RpcDo_CaptureProgressBroadcast(int objectiveId, float progress, int capturingFactionIndex, bool isBeingCaptured)
+	{
+		TG5_ObjectiveObject obj = FindObjectiveById(objectiveId);
+		if (!obj)
+			return;
+
+		obj.SetCaptureProgress(progress);
+		obj.SetCapturingFaction(IndexToFactionKey(capturingFactionIndex));
+		obj.SetBeingCaptured(isBeingCaptured);
+		
+		if (!isBeingCaptured)
+			obj.SetContested(false);
+
+		m_OnCaptureProgress.Invoke(obj, progress, obj.GetCapturingFaction());
 	}
 
 	//------------------------------------------------------------------------------------------------

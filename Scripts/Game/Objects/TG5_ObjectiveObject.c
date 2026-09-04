@@ -30,6 +30,16 @@ class TG5_ObjectiveObject
 
 	protected ref array<SCR_AIGroup> m_aAiObjUnits = new array<SCR_AIGroup>();
 
+	// Capture progress state
+	protected float m_fCaptureProgress = 0.0;           // 0.0 to 1.0
+	protected FactionKey m_CapturingFaction;             // Who's currently capturing
+	protected bool m_bIsContested = false;               // Multiple factions present
+	protected bool m_bIsBeingCaptured = false;           // Currently in capture process
+
+	// UI widgets for capture system
+	protected Widget m_wCaptureProgressWidget;            // Progress bar widget
+	protected Widget m_wNotificationWidget;              // Notification popup
+
 	int GetId() { return m_iId; }
 	string GetObjType() { return m_sObjType; }
 	string GetDisplayName() { return m_sName; }
@@ -41,6 +51,13 @@ class TG5_ObjectiveObject
 	int GetVehNum() { return m_iVehNum; }
 	bool IsActive() { return m_bActive; }
 	TG5_ObjectiveTriggerEntity GetTrigger() { return m_tTrigger; }
+	
+	float GetCaptureProgress() { return m_fCaptureProgress; }
+	FactionKey GetCapturingFaction() { return m_CapturingFaction; }
+	bool IsContested() { return m_bIsContested; }
+	bool IsBeingCaptured() { return m_bIsBeingCaptured; }
+	Widget GetCaptureProgressWidget() { return m_wCaptureProgressWidget; }
+	Widget GetNotificationWidget() { return m_wNotificationWidget; }
 
 	//------------------------------------------------------------------------------------------------
 	void SetObjType(string type)
@@ -75,6 +92,13 @@ class TG5_ObjectiveObject
 	void SetObjWidget(Widget w) { m_wObjWidget = w; }
 	void SetOwningFaction(FactionKey faction) { m_OwningFaction = faction; }
 	void SetTrigger(TG5_ObjectiveTriggerEntity trigger) { m_tTrigger = trigger; }
+	
+	void SetCaptureProgress(float progress) { m_fCaptureProgress = progress; }
+	void SetCapturingFaction(FactionKey faction) { m_CapturingFaction = faction; }
+	void SetContested(bool contested) { m_bIsContested = contested; }
+	void SetBeingCaptured(bool capturing) { m_bIsBeingCaptured = capturing; }
+	void SetCaptureProgressWidget(Widget w) { m_wCaptureProgressWidget = w; }
+	void SetNotificationWidget(Widget w) { m_wNotificationWidget = w; }
 
 	//------------------------------------------------------------------------------------------------
 	int AddAiGroup(SCR_AIGroup group) { return m_aAiObjUnits.Insert(group); }
@@ -137,5 +161,15 @@ class TG5_ObjectiveObject
 		m_fCaptureRadius = captureRadius;
 
 		SetObjType(def.m_sType);
+	}
+
+	//------------------------------------------------------------------------------------------------
+	// Reset capture state when ownership changes or capture is interrupted
+	void ResetCaptureState()
+	{
+		m_fCaptureProgress = 0.0;
+		m_CapturingFaction = string.Empty;
+		m_bIsContested = false;
+		m_bIsBeingCaptured = false;
 	}
 }

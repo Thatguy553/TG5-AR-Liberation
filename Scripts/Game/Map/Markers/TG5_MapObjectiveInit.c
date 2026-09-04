@@ -32,6 +32,9 @@ class TG5_MapObjectiveInit
 	protected bool m_bMapViewEventsSubscribed = false;
 	protected bool m_bOpenSubscribed = false;
 
+	// Capture UI component for progress bars and notifications
+	protected ref TG5_CaptureUIComponent m_CaptureUI;
+
 	//------------------------------------------------------------------------------------------------
 	void TG5_MapObjectiveInit(notnull TG5_ObjectiveManagerComponent manager)
 	{
@@ -39,6 +42,12 @@ class TG5_MapObjectiveInit
 
 		m_Manager.GetOnObjectivesReady().Insert(OnObjectivesReady);
 		m_Manager.GetOnObjectiveCaptured().Insert(OnObjectiveCaptured);
+
+		// Initialize capture UI component (skip on dedicated server)
+		if (!System.IsConsoleApp())
+		{
+			m_CaptureUI = new TG5_CaptureUIComponent(manager);
+		}
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -325,6 +334,14 @@ class TG5_MapObjectiveInit
 		{
 			m_Manager.GetOnObjectivesReady().Remove(OnObjectivesReady);
 			m_Manager.GetOnObjectiveCaptured().Remove(OnObjectiveCaptured);
+		}
+
+		// Cleanup capture UI component
+		if (m_CaptureUI)
+		{
+			m_CaptureUI.Cleanup();
+			delete m_CaptureUI;
+			m_CaptureUI = null;
 		}
 	}
 }
