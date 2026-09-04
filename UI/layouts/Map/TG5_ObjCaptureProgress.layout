@@ -4,14 +4,15 @@ FrameWidgetClass {
   OverlayWidgetClass "{6A48CB8B51458164}" {
    Name "Background"
    Slot FrameWidgetSlot "{6A48CB8B5145813C}" {
-    PositionX 1610.57
-    OffsetLeft 1610.57
-    PositionY 263.169
-    OffsetTop 263.169
-    SizeX 308.46
-    OffsetRight -1919.03
-    SizeY 81.258
-    OffsetBottom -344.427
+    Anchor 0 0 0 0
+    PositionX 0
+    OffsetLeft 0
+    PositionY 0
+    OffsetTop 0
+    SizeX 308
+    OffsetRight -308
+    SizeY 81
+    OffsetBottom -81
    }
    Color 0 0 0 1
    {
@@ -19,7 +20,7 @@ FrameWidgetClass {
      Name "Image0"
      Slot OverlayWidgetSlot "{6A48CB8CF22216D7}" {
      }
-     Color 0 0 0 0.9375
+     Color 0 0 0 0.75
      Size 308 81
     }
    }
@@ -27,28 +28,30 @@ FrameWidgetClass {
   ImageWidgetClass "{6A48CB8DD0BE4B91}" {
    Name "ProgressBarBot"
    Slot FrameWidgetSlot "{6A48CB8DD0BE4B7D}" {
-    PositionX 1619.17
-    OffsetLeft 1619.17
-    PositionY 302.814
-    OffsetTop 302.814
-    SizeX 292.85
-    OffsetRight -1912.02
-    SizeY 27.34
-    OffsetBottom -330.153
+    Anchor 0 0 0 0
+    PositionX 8
+    OffsetLeft 8
+    PositionY 40
+    OffsetTop 40
+    SizeX 292
+    OffsetRight -8
+    SizeY 27
+    OffsetBottom -14
    }
    Color 0.4706 0.0053 0.0053 1
   }
   ProgressBarWidgetClass "{6A48CB8CB1A6ECEB}" {
    Name "ProgressBarTop"
    Slot FrameWidgetSlot "{6A48CB8CB1A6ECCD}" {
-    PositionX 1618.67
-    OffsetLeft 1618.67
-    PositionY 301.706
-    OffsetTop 301.706
-    SizeX 293.074
-    OffsetRight -1911.74
+    Anchor 0 0 0 0
+    PositionX 8
+    OffsetLeft 8
+    PositionY 39
+    OffsetTop 39
+    SizeX 292
+    OffsetRight -8
     SizeY 30
-    OffsetBottom -331.706
+    OffsetBottom -12
    }
    Color 0.0024 0.0352 0.5356 1
    style SimpleOutline
@@ -57,16 +60,17 @@ FrameWidgetClass {
   RichTextWidgetClass "{6A48CB8DEF13F476}" {
    Name "ObjName"
    Slot FrameWidgetSlot "{6A48CB8DEF13F457}" {
-    PositionX 1620.45
-    OffsetLeft 1620.45
-    PositionY 267.815
-    OffsetTop 267.815
-    SizeX 292.047
-    OffsetRight -1912.5
+    Anchor 0 0 0 0
+    PositionX 8
+    OffsetLeft 8
+    PositionY 8
+    OffsetTop 8
+    SizeX 292
+    OffsetRight -8
     SizeY 30
-    OffsetBottom -297.815
+    OffsetBottom -43
    }
-   Color 0.4706 0.0053 0.0053 1
+   Color 1 1 1 1
    "Horizontal Alignment" Right
    "Vertical Alignment" Center
   }

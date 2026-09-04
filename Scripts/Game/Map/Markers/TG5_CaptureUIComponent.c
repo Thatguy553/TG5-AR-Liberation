@@ -95,7 +95,16 @@ class TG5_CaptureUIComponent
 		ImageWidget progressBarBot = ImageWidget.Cast(progressWidget.FindAnyWidget("ProgressBarBot"));
 		if (progressBarBot)
 		{
-			progressBarBot.SetColor(GetFactionColor(capturingFaction));
+			Color factionColor = GetFactionColor(capturingFaction);
+			progressBarBot.SetColor(factionColor);
+		}
+
+		// Also update the progress bar fill color
+		ProgressBarWidget progressBar = ProgressBarWidget.Cast(progressWidget.FindAnyWidget("ProgressBarTop"));
+		if (progressBar)
+		{
+			Color factionColor = GetFactionColor(capturingFaction);
+			progressBar.SetColor(factionColor);
 		}
 	}
 
@@ -111,10 +120,19 @@ class TG5_CaptureUIComponent
 		if (!progressWidget)
 			return null;
 
-		// Position on screen - hardcoded from layout, could be made dynamic
-		FrameSlot.SetAnchorMin(progressWidget, 1, 0);
-		FrameSlot.SetAnchorMax(progressWidget, 1, 0);
-		FrameSlot.SetAlignment(progressWidget, 1, 0);
+		// Position in bottom-right corner of screen as HUD element
+		FrameSlot.SetAnchorMin(progressWidget, 1, 1);
+		FrameSlot.SetAnchorMax(progressWidget, 1, 1);
+		FrameSlot.SetAlignment(progressWidget, 1, 1);
+		
+		// Set position with some padding from screen edges
+		int screenWidth, screenHeight;
+		workspace.GetScreenSize(screenWidth, screenHeight);
+		
+		float paddingX = 20.0;  // Padding from right edge
+		float paddingY = 100.0; // Padding from bottom edge
+		
+		FrameSlot.SetPos(progressWidget, -paddingX, -paddingY);
 
 		return progressWidget;
 	}
