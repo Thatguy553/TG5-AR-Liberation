@@ -1,13 +1,17 @@
 //------------------------------------------------------------------------------------------------
-class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
+// Draws an objective marker on the map for every objective the manager knows
+// about. Purely presentational: it discovers nothing, owns no objective state
+// and spawns no entities, so it is safe for this to not exist at all (which is
+// the case on a dedicated server).
+//
+// Deliberately not a SCR_MapUIBaseComponent. That base class is constructed by
+// SCR_MapEntity from the map configuration's component list and driven through
+// Init/SetActive/OnMapOpen; instantiating one by hand gets none of that
+// lifecycle, and its constructor dereferences a map instance that a dedicated
+// server does not have. Registering a real map UI component (or moving to map
+// descriptors) is the longer-term fix.
+class TG5_MapObjectiveInit
 {
-	// Objective type identifiers - used as the key for icon lookup in GetIconForType
-	static const string OBJ_TYPE_CITY = "city";
-	static const string OBJ_TYPE_TOWN = "town";
-	static const string OBJ_TYPE_MILITARY = "military";
-	static const string OBJ_TYPE_RADIO = "radio";
-	static const string OBJ_TYPE_FACTORY = "factory";
-
 	//------------------------------------------------------------------------------------------------
 	// Config
 	//------------------------------------------------------------------------------------------------
@@ -21,192 +25,48 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 	protected string m_sImgRadio = "radio";
 	protected string m_sImgFactory = "factory";
 
-	// Set false to silence diagnostic output
-	protected bool m_bDebugLog = true;
 
 	//------------------------------------------------------------------------------------------------
-	// Objective source data (gathered once, filtered by type)
-	//------------------------------------------------------------------------------------------------
-	protected ref array<MapItem> m_aMapCities = new array<MapItem>();
-	protected ref array<MapItem> m_aMapTowns = new array<MapItem>();
-	protected ref array<MapItem> m_aMapVillages = new array<MapItem>();
-	protected ref array<MapItem> m_aMapMilitary = new array<MapItem>();
-	protected ref array<MapItem> m_aMapGenerics = new array<MapItem>();
+	protected TG5_ObjectiveManagerComponent m_Manager;
 
-	// Full session objective list - accumulated across every AddObjectiveMark call,
-	// used to rebuild markers on every map open for the rest of the session.
-	// Each TG5_ObjectiveObject owns its runtime widget while the map is open.
-	protected ref array<ref TG5_ObjectiveObject> m_aAllObjectives = new array<ref TG5_ObjectiveObject>();
-
-	//------------------------------------------------------------------------------------------------
-	// Marker widget runtime state
-	//------------------------------------------------------------------------------------------------
 	protected bool m_bMapViewEventsSubscribed = false;
 	protected bool m_bOpenSubscribed = false;
 
-	// Scratch array reused by FilterGenericLocations' sphere query
-	protected ref array<IEntity> m_aBuildingEntities = new array<IEntity>();
-
 	//------------------------------------------------------------------------------------------------
-	// Init
-	//------------------------------------------------------------------------------------------------
-
-	// Call once the world/game mode is confirmed ready (e.g. from your game mode's
-	// OnWorldPostProcess) - NOT from the constructor, since the map/world systems
-	// this depends on aren't guaranteed to exist yet at construction time.
-	void Initialize()
+	void TG5_MapObjectiveInit(notnull TG5_ObjectiveManagerComponent manager)
 	{
-		GatherMapLocations();
-		AddObjectiveMark(m_aMapCities, OBJ_TYPE_CITY);
-		AddObjectiveMark(m_aMapTowns, OBJ_TYPE_TOWN);
-		AddObjectiveMark(m_aMapMilitary, OBJ_TYPE_MILITARY);
+		m_Manager = manager;
+
+		m_Manager.GetOnObjectivesReady().Insert(OnObjectivesReady);
+		m_Manager.GetOnObjectiveCaptured().Insert(OnObjectiveCaptured);
 	}
 
 	//------------------------------------------------------------------------------------------------
-	// Authority-safe variant: runs the same map descriptor gathering and
-	// classification WITHOUT creating markers, widgets, or subscribing to any
-	// map UI events. Used by the objective manager on dedicated servers, which
-	// need the objective list (positions/types) but have no map UI.
-	void GatherOnly()
+	// The objective list arrives from the authority (or is built locally on a
+	// listen server) after this component exists, so markers are built here
+	// rather than at construction.
+	protected void OnObjectivesReady()
 	{
-		GatherMapLocations();
-
-		BuildObjectiveObjects(m_aMapCities, OBJ_TYPE_CITY);
-		BuildObjectiveObjects(m_aMapTowns, OBJ_TYPE_TOWN);
-		BuildObjectiveObjects(m_aMapMilitary, OBJ_TYPE_MILITARY);
-	}
-
-	//------------------------------------------------------------------------------------------------
-	// Public API
-	//------------------------------------------------------------------------------------------------
-
-	// Batch-add objectives gathered from the map descriptor system
-	void AddObjectiveMark(array<MapItem> objectives, string objType)
-	{
-		if (!objectives || objectives.IsEmpty())
-			return;
-
-		array<ref TG5_ObjectiveObject> batch = BuildObjectiveObjects(objectives, objType);
-
 		EnsureOpenSubscription();
 
 		SCR_MapEntity mapEntity = SCR_MapEntity.GetMapInstance();
 		if (mapEntity && mapEntity.IsOpen())
-			BuildMarkers(batch); // map already open - build just this batch
+			RebuildMarkers();
 	}
 
 	//------------------------------------------------------------------------------------------------
-	// Wrap map items in objective objects and register them in the session
-	// list. No UI work - safe to call on a dedicated server.
-	protected array<ref TG5_ObjectiveObject> BuildObjectiveObjects(array<MapItem> objectives, string objType)
+	protected array<ref TG5_ObjectiveObject> GetObjectives()
 	{
-		array<ref TG5_ObjectiveObject> batch = new array<ref TG5_ObjectiveObject>();
-
-		foreach (MapItem item : objectives)
-		{
-			TG5_ObjectiveObject obj = new TG5_ObjectiveObject();
-			obj.SetObjType(objType);
-			obj.SetObjMapItem(item);
-			obj.SetObjEntity(item.Entity()); // may be null for pure name-descriptor items
-			
-			TG5_ObjectiveTriggerEntity trig = BuildObjectiveTrigger(obj);
-			obj.SetTrigger(trig);
-			obj.BindTrigger();
-			
-			m_aAllObjectives.Insert(obj);
-			batch.Insert(obj);
-		}
-
-		return batch;
-	}
-	
-	//------------------------------------------------------------------------------------------------
-	// Spawn the trigger entity and return it
-	// 
-	protected TG5_ObjectiveTriggerEntity BuildObjectiveTrigger(TG5_ObjectiveObject obj)
-	{
-		vector pos = GetObjectivePos(obj); // MapItem pos, falling back to entity origin
-		EntitySpawnParams params = new EntitySpawnParams();
-		params.TransformMode = ETransformMode.WORLD;
-		params.Transform[3] = pos;
-		
-		ResourceName trigger = "{D9130D20F5A6942F}Prefabs/Triggers/TG5_ObjectiveTriggerEntity.et";
-		
-		IEntity ent = GetGame().SpawnEntityPrefabEx(trigger, false, null, params: params);
-		return TG5_ObjectiveTriggerEntity.Cast(ent);
-	}
-
-	//------------------------------------------------------------------------------------------------
-	// Add a single pre-built objective - for runtime/side-mission objectives that
-	// have an entity (or just a position) rather than a map descriptor item
-	void AddObjectiveMark(TG5_ObjectiveObject obj)
-	{
-		if (!obj)
-			return;
-
-		m_aAllObjectives.Insert(obj);
-		EnsureOpenSubscription();
-
-		SCR_MapEntity mapEntity = SCR_MapEntity.GetMapInstance();
-		if (mapEntity && mapEntity.IsOpen())
-		{
-			BuildMarker(obj);
-			SubscribeMapViewEvents();
-		}
-	}
-
-	//------------------------------------------------------------------------------------------------
-	void RemoveObjectiveMark(TG5_ObjectiveObject obj)
-	{
-		if (!obj)
-			return;
-
-		Widget w = obj.GetObjWidget();
-		if (w)
-		{
-			w.RemoveFromHierarchy();
-			obj.SetObjWidget(null);
-		}
-
-		m_aAllObjectives.RemoveItem(obj);
-	}
-
-	//------------------------------------------------------------------------------------------------
-	// Change an objective's type - swaps the icon immediately if the marker is drawn
-	void FlipObjectiveMark(TG5_ObjectiveObject obj, string newType)
-	{
-		if (!obj)
-			return;
-
-		obj.SetObjType(newType);
-
-		Widget w = obj.GetObjWidget();
-		if (!w)
-			return;
-
-		ImageWidget objImage = ImageWidget.Cast(w.FindAnyWidget("Image0"));
-		if (objImage)
-		{
-			objImage.LoadImageFromSet(0, m_sImageSet, GetIconForType(newType));
-			objImage.SetImage(0);
-		}
-	}
-
-	//------------------------------------------------------------------------------------------------
-	array<ref TG5_ObjectiveObject> GetObjectives()
-	{
-		return m_aAllObjectives;
+		return m_Manager.GetObjectives();
 	}
 
 	//------------------------------------------------------------------------------------------------
 	// Marker building / positioning
 	//------------------------------------------------------------------------------------------------
 
-	override void OnMapOpen(MapConfiguration config)
+	protected void OnMapOpenComplete(MapConfiguration config)
 	{
-		super.OnMapOpen(config);
-
-		if (!m_aAllObjectives.IsEmpty())
+		if (!GetObjectives().IsEmpty())
 			RebuildMarkers();
 	}
 
@@ -215,18 +75,7 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 	{
 		ClearMarkerWidgets();
 
-		foreach (TG5_ObjectiveObject obj : m_aAllObjectives)
-		{
-			BuildMarker(obj);
-		}
-
-		SubscribeMapViewEvents();
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected void BuildMarkers(array<ref TG5_ObjectiveObject> objectives)
-	{
-		foreach (TG5_ObjectiveObject obj : objectives)
+		foreach (TG5_ObjectiveObject obj : GetObjectives())
 		{
 			BuildMarker(obj);
 		}
@@ -256,21 +105,79 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 
 		obj.SetObjWidget(w);
 
-		vector worldPos = GetObjectivePos(obj);
-
 		TextWidget objName = TextWidget.Cast(w.FindAnyWidget("Name"));
-		if (objName && obj.GetObjMapItem())
-			objName.SetText(obj.GetObjMapItem().GetDisplayName());
+		if (objName)
+			objName.SetText(obj.GetDisplayName());
 
 		ImageWidget objImage = ImageWidget.Cast(w.FindAnyWidget("Image0"));
 		if (objImage)
 		{
 			objImage.LoadImageFromSet(0, m_sImageSet, GetIconForType(obj.GetObjType()));
 			objImage.SetImage(0);
-			objImage.SetColor(Color.DarkRed);
 		}
 
-		PositionMarker(w, worldPos);
+		ApplyOwnerColor(obj);
+		PositionMarker(w, obj.GetPos());
+	}
+
+	//------------------------------------------------------------------------------------------------
+	// Fired on every machine by the manager's capture broadcast
+	protected void OnObjectiveCaptured(TG5_ObjectiveObject obj, FactionKey newOwner, FactionKey oldOwner)
+	{
+		ApplyOwnerColor(obj);
+	}
+
+	//------------------------------------------------------------------------------------------------
+	protected void ApplyOwnerColor(TG5_ObjectiveObject obj)
+	{
+		Widget w = obj.GetObjWidget();
+		if (!w)
+			return;
+
+		ImageWidget objImage = ImageWidget.Cast(w.FindAnyWidget("Image0"));
+		if (!objImage)
+			return;
+
+		objImage.SetColor(GetOwnerColor(obj.GetOwningFaction()));
+	}
+
+	//------------------------------------------------------------------------------------------------
+	// Unowned objectives keep the original dark red
+	protected Color GetOwnerColor(FactionKey owner)
+	{
+		if (owner.IsEmpty())
+			return Color.DarkRed;
+
+		FactionManager factionManager = GetGame().GetFactionManager();
+		if (!factionManager)
+			return Color.DarkRed;
+
+		Faction faction = factionManager.GetFactionByKey(owner);
+		if (!faction)
+			return Color.DarkRed;
+
+		return faction.GetFactionColor();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	// Change an objective's type - swaps the icon immediately if the marker is drawn
+	void FlipObjectiveMark(TG5_ObjectiveObject obj, string newType)
+	{
+		if (!obj)
+			return;
+
+		obj.SetObjType(newType);
+
+		Widget w = obj.GetObjWidget();
+		if (!w)
+			return;
+
+		ImageWidget objImage = ImageWidget.Cast(w.FindAnyWidget("Image0"));
+		if (objImage)
+		{
+			objImage.LoadImageFromSet(0, m_sImageSet, GetIconForType(newType));
+			objImage.SetImage(0);
+		}
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -278,7 +185,7 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 	{
 		// Widgets live inside the map frame; if the map is open they still exist
 		// and must be removed explicitly, otherwise closing the map destroys them
-		foreach (TG5_ObjectiveObject obj : m_aAllObjectives)
+		foreach (TG5_ObjectiveObject obj : GetObjectives())
 		{
 			Widget w = obj.GetObjWidget();
 			if (w)
@@ -290,29 +197,15 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 	}
 
 	//------------------------------------------------------------------------------------------------
-	// Objectives are positioned by their map item when available, falling back
-	// to their entity origin (entity-based runtime objectives)
-	protected vector GetObjectivePos(TG5_ObjectiveObject obj)
-	{
-		if (obj.GetObjMapItem())
-			return obj.GetObjMapItem().GetPos();
-
-		if (obj.GetObjEntity())
-			return obj.GetObjEntity().GetOrigin();
-
-		return vector.Zero;
-	}
-
-	//------------------------------------------------------------------------------------------------
 	protected string GetIconForType(string objType)
 	{
 		switch (objType)
 		{
-			case OBJ_TYPE_CITY: return m_sImgCity;
-			case OBJ_TYPE_TOWN: return m_sImgTown;
-			case OBJ_TYPE_MILITARY: return m_sImgMilitary;
-			case OBJ_TYPE_RADIO: return m_sImgRadio;
-			case OBJ_TYPE_FACTORY: return m_sImgFactory;
+			case "city": return m_sImgCity;
+			case "town": return m_sImgTown;
+			case "military": return m_sImgMilitary;
+			case "radio": return m_sImgRadio;
+			case "factory": return m_sImgFactory;
 		}
 
 		return m_sImgTown;
@@ -335,11 +228,11 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 	//------------------------------------------------------------------------------------------------
 	protected void RepositionAll()
 	{
-		foreach (TG5_ObjectiveObject obj : m_aAllObjectives)
+		foreach (TG5_ObjectiveObject obj : GetObjectives())
 		{
 			Widget w = obj.GetObjWidget();
 			if (w)
-				PositionMarker(w, GetObjectivePos(obj));
+				PositionMarker(w, obj.GetPos());
 		}
 	}
 
@@ -347,8 +240,8 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 	// Map view event handlers
 	//------------------------------------------------------------------------------------------------
 
-	// Subscribe once for the whole session; OnMapOpen rebuilds from the
-	// full m_aAllObjectives list every time the map opens from here on.
+	// Subscribe once for the whole session; OnMapOpenComplete rebuilds from the
+	// manager's objective list every time the map opens from here on.
 	// m_bOpenSubscribed is set HERE at subscription time and never reset on
 	// map close - the invoker survives across opens, so the handler must not
 	// be inserted again (ScriptInvoker.Insert does not deduplicate).
@@ -357,7 +250,7 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 		if (m_bOpenSubscribed)
 			return;
 
-		SCR_MapEntity.GetOnMapOpenComplete().Insert(OnMapOpen);
+		SCR_MapEntity.GetOnMapOpenComplete().Insert(OnMapOpenComplete);
 		m_bOpenSubscribed = true;
 	}
 
@@ -395,10 +288,10 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 
 	//------------------------------------------------------------------------------------------------
 	// Map's internal widgets get torn down on close, so ours go with them -
-	// drop our references and unsubscribe until OnMapOpen rebuilds next time
+	// drop our references and unsubscribe until the map opens again
 	protected void OnMapClosed(MapConfiguration config)
 	{
-		foreach (TG5_ObjectiveObject obj : m_aAllObjectives)
+		foreach (TG5_ObjectiveObject obj : GetObjectives())
 		{
 			obj.SetObjWidget(null);
 		}
@@ -411,123 +304,27 @@ class TG5_MapObjectiveInit : SCR_MapUIBaseComponent
 	}
 
 	//------------------------------------------------------------------------------------------------
-	// Objective gathering / filtering
-	//------------------------------------------------------------------------------------------------
-
-	protected void GatherMapLocations()
-	{
-		DebugLog("[MapObjectiveInit] GatherMapLocations Running");
-
-		MapEntity mapEntity = GetGame().GetMapManager();
-		if (mapEntity)
-		{
-			int count = mapEntity.GetByType(m_aMapCities, EMapDescriptorType.MDT_NAME_CITY);
-			count += mapEntity.GetByType(m_aMapTowns, EMapDescriptorType.MDT_NAME_TOWN);
-			count += mapEntity.GetByType(m_aMapVillages, EMapDescriptorType.MDT_NAME_VILLAGE);
-			count += mapEntity.GetByType(m_aMapGenerics, EMapDescriptorType.MDT_NAME_GENERIC);
-			DebugLog(count.ToString());
-		}
-
-		m_aMapCities.InsertAll(m_aMapTowns);
-
-		array<MapItem> filteredCity = new array<MapItem>();
-		array<MapItem> filteredVillage = new array<MapItem>();
-		array<MapItem> filteredMilitary = new array<MapItem>();
-		FilterGenericLocations(mapEntity, m_aMapGenerics, filteredCity, filteredVillage, filteredMilitary);
-
-		m_aMapCities.InsertAll(filteredCity);
-		m_aMapTowns.InsertAll(filteredVillage);
-		m_aMapMilitary.InsertAll(filteredMilitary);
-
-		DebugLog(string.Format("[GatherMapLocations] Cities: %1 | Towns: %2 | Military: %3",
-			m_aMapCities.Count(), m_aMapTowns.Count(), m_aMapMilitary.Count()));
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected void FilterGenericLocations(MapEntity mapEnt, array<MapItem> mapItems, out array<MapItem> city, out array<MapItem> town, out array<MapItem> military)
-	{
-		float searchRadius = 300.0;
-
-		foreach (MapItem item : mapItems)
-		{
-			m_aBuildingEntities.Clear(); // clear at the START of every iteration - guarantees no leakage regardless of which branch below fires
-
-			string mapName = item.GetDisplayName();
-			DebugLog("[Filter] Checking Location: " + mapName);
-
-			GetGame().GetWorld().QueryEntitiesBySphere(item.GetPos(), searchRadius, AddBuildingEntity, null, EQueryEntitiesFlags.STATIC);
-
-			if (mapName.Contains("Military"))
-			{
-				DebugLog("[Filter] Military Inserted");
-				military.Insert(item);
-				continue;
-			}
-
-			int buildingCount = m_aBuildingEntities.Count();
-
-			if (buildingCount >= 13)
-			{
-				DebugLog("[Filter] City Inserted");
-				city.Insert(item);
-				continue;
-			}
-
-			if (buildingCount >= 4 && buildingCount <= 10)
-			{
-				DebugLog("[Filter] Town Inserted");
-				town.Insert(item);
-				continue;
-			}
-
-			DebugLog("[Filter] Not Inserted");
-		}
-	}
-
-	//------------------------------------------------------------------------------------------------
-	// Sphere query callback - only destructible buildings count toward the
-	// city/Town classification; trees, vehicles, characters etc. are ignored
-	bool AddBuildingEntity(IEntity ent)
-	{
-		if (SCR_DestructibleBuildingEntity.Cast(ent))
-			m_aBuildingEntities.Insert(ent);
-
-		return true; // continue the query
-	}
-
-	//------------------------------------------------------------------------------------------------
 	// Cleanup
 	//------------------------------------------------------------------------------------------------
 
 	// Unsubscribe everything - call from the owning component's destructor.
-	// The invokers are static and outlive this object; leaving handlers bound
-	// would keep this instance alive and firing against a dead context.
+	// The map invokers are static and outlive this object; leaving handlers
+	// bound would keep this instance alive and firing against a dead context.
 	void Cleanup()
 	{
 		if (m_bOpenSubscribed)
 		{
-			SCR_MapEntity.GetOnMapOpenComplete().Remove(OnMapOpen);
+			SCR_MapEntity.GetOnMapOpenComplete().Remove(OnMapOpenComplete);
 			m_bOpenSubscribed = false;
 		}
 
 		if (m_bMapViewEventsSubscribed)
 			OnMapClosed(null);
 
-		m_aAllObjectives.Clear();
-	}
-
-	//------------------------------------------------------------------------------------------------
-	protected void DebugLog(string msg)
-	{
-		if (m_bDebugLog)
-			Print(msg);
-	}
-
-	//------------------------------------------------------------------------------------------------
-	// Future / not yet implemented
-	//------------------------------------------------------------------------------------------------
-
-	protected void UpdateObjectiveMarkName()
-	{
+		if (m_Manager)
+		{
+			m_Manager.GetOnObjectivesReady().Remove(OnObjectivesReady);
+			m_Manager.GetOnObjectiveCaptured().Remove(OnObjectiveCaptured);
+		}
 	}
 }
