@@ -19,13 +19,13 @@ FrameWidgetClass {
   ImageWidgetClass "{6A49277889F646AE}" {
    Name "ProgressBarBot"
    Slot FrameWidgetSlot "{6A49277889F6468B}" {
-    PositionX 1608
-    OffsetLeft 1608
-    PositionY 192
-    OffsetTop 192
-    SizeX 308
-    OffsetRight -1916
-    SizeY 30
+    PositionX 1615.62
+    OffsetLeft 1615.62
+    PositionY 195.518
+    OffsetTop 195.518
+    SizeX 292.15
+    OffsetRight -1907.77
+    SizeY 26.482
     OffsetBottom -222
    }
    Color 0.5686 0 0 1
@@ -34,13 +34,13 @@ FrameWidgetClass {
   ProgressBarWidgetClass "{6A492778B65470B1}" {
    Name "ProgressBarTop"
    Slot FrameWidgetSlot "{6A492778B6547093}" {
-    PositionX 1608
-    OffsetLeft 1608
-    PositionY 192
-    OffsetTop 192
-    SizeX 304
-    OffsetRight -1912
-    SizeY 30
+    PositionX 1615.62
+    OffsetLeft 1615.62
+    PositionY 195.518
+    OffsetTop 195.518
+    SizeX 292.15
+    OffsetRight -1907.77
+    SizeY 26.482
     OffsetBottom -222
    }
    Color 0 0.1559 0.7607 1

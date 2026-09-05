@@ -288,21 +288,6 @@ class TG5_CaptureUIComponent
 	}
 
 	//------------------------------------------------------------------------------------------------
-	// Position a widget on the map at world coordinates
-	protected void PositionMarker(Widget w, vector worldPos)
-	{
-		SCR_MapEntity mapEntity = SCR_MapEntity.GetMapInstance();
-		if (!mapEntity)
-			return;
-
-		int screenX, screenY;
-		mapEntity.WorldToScreen(worldPos[0], worldPos[2], screenX, screenY, true);
-
-		WorkspaceWidget workspace = GetGame().GetWorkspace();
-		FrameSlot.SetPos(w, workspace.DPIUnscale(screenX), workspace.DPIUnscale(screenY));
-	}
-
-	//------------------------------------------------------------------------------------------------
 	// Cleanup
 	void Cleanup()
 	{
