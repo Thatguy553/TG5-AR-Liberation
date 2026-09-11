@@ -1,0 +1,7 @@
+Vehicle {
+ ID "BBCBA43A9778AE21"
+ components {
+  TG5_SpawnCrewComponent "{6A575C0380A49159}" {
+  }
+ }
+}

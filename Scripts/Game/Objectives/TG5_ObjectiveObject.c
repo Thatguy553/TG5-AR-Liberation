@@ -18,9 +18,11 @@ class TG5_ObjectiveObject
 	protected TG5_ObjectiveTriggerEntity m_tTrigger;
 
 	protected int m_iInfGroupNum = 0;
-	protected int m_iVehNum = 0;
+	protected int m_iHeavyVehNum = 0;
+	protected int m_iLightVehNum = 0;
 
 	protected bool m_bActive = false;
+	protected int m_iDeactivationRequest = 0;
 
 	protected TG5_ObjectiveManagerComponent m_cObjMngr;
 
@@ -29,6 +31,8 @@ class TG5_ObjectiveObject
 	protected FactionKey m_OwningFaction;
 
 	protected ref array<SCR_AIGroup> m_aAiObjUnits = new array<SCR_AIGroup>();
+	protected ref array<AIWaypoint> m_aAiWaypoints = new array<AIWaypoint>();
+	protected ref array<IEntity> m_aAiVehicles = new array<IEntity>();
 
 	// Capture progress state
 	protected float m_fCaptureProgress = 0.0;           // 0.0 to 1.0
@@ -48,7 +52,7 @@ class TG5_ObjectiveObject
 	Widget GetObjWidget() { return m_wObjWidget; }
 	FactionKey GetOwningFaction() { return m_OwningFaction; }
 	int GetInfGroupNum() { return m_iInfGroupNum; }
-	int GetVehNum() { return m_iVehNum; }
+	int GetVehNum() { return m_iHeavyVehNum + m_iLightVehNum; }
 	bool IsActive() { return m_bActive; }
 	TG5_ObjectiveTriggerEntity GetTrigger() { return m_tTrigger; }
 	
@@ -68,23 +72,25 @@ class TG5_ObjectiveObject
 		{
 			case "city":
 				m_iInfGroupNum = 10;
-				m_iVehNum = 4;
+				m_iHeavyVehNum = 2;
+				m_iLightVehNum = 2;
 				return;
 			case "military":
 				m_iInfGroupNum = 5;
-				m_iVehNum = 3;
+				m_iHeavyVehNum = 2;
 				return;
 			case "factory":
 				m_iInfGroupNum = 3;
-				m_iVehNum = 1;
+				m_iHeavyVehNum = 1;
 				return;
 			case "town":
 				m_iInfGroupNum = 4;
-				m_iVehNum = 1;
+				m_iHeavyVehNum = 1;
+				m_iLightVehNum = 1;
 				return;
 			case "radio":
 				m_iInfGroupNum = 2;
-				m_iVehNum = 1;
+				m_iLightVehNum = 1;
 				return;
 		}
 	}
@@ -117,6 +123,28 @@ class TG5_ObjectiveObject
 	bool RemoveAiGroup(SCR_AIGroup group) { return m_aAiObjUnits.RemoveItem(group); }
 	void RemoveAiGroup(int index) { m_aAiObjUnits.Remove(index); }
 	int GetAiGroupCount() { return m_aAiObjUnits.Count(); }
+	int GetHeavyVehNum() { return m_iHeavyVehNum; }
+	int GetLightVehNum() { return m_iLightVehNum; }
+	void AddAiWaypoint(AIWaypoint waypoint)
+	{
+		if (waypoint)
+			m_aAiWaypoints.Insert(waypoint);
+	}
+	void AddAiVehicle(IEntity vehicle)
+	{
+		if (vehicle)
+			m_aAiVehicles.Insert(vehicle);
+	}
+	void ClearAiGarrison()
+	{
+		m_aAiObjUnits.Clear();
+		m_aAiWaypoints.Clear();
+		m_aAiVehicles.Clear();
+	}
+	array<SCR_AIGroup> GetAiGroups() { return m_aAiObjUnits; }
+	array<AIWaypoint> GetAiWaypoints() { return m_aAiWaypoints; }
+	array<IEntity> GetAiVehicles() { return m_aAiVehicles; }
+	int GetDeactivationRequest() { return m_iDeactivationRequest; }
 
 	//------------------------------------------------------------------------------------------------
 	// Fired by the trigger when the first player enters. Authority only in
@@ -126,7 +154,16 @@ class TG5_ObjectiveObject
 		if (m_bActive || !m_cObjMngr)
 			return;
 
-		// Set before spawning so a re-entrant activation can't double-garrison
+		// Invalidate any delayed cleanup scheduled after the previous departure.
+		m_iDeactivationRequest++;
+
+		if (GetAiGroupCount() > 0)
+		{
+			m_bActive = true;
+			return;
+		}
+
+		// Set before spawning so a re-entrant activation can't double-garrison.
 		m_bActive = true;
 		m_cObjMngr.SpawnGarrison(this);
 	}
@@ -135,6 +172,9 @@ class TG5_ObjectiveObject
 	void DeActivate()
 	{
 		m_bActive = false;
+		m_iDeactivationRequest++;
+		if (m_cObjMngr)
+			m_cObjMngr.ScheduleGarrisonCleanup(this, m_iDeactivationRequest);
 	}
 
 	//------------------------------------------------------------------------------------------------

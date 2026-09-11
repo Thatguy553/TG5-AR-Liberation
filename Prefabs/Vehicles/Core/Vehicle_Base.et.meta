@@ -1,5 +1,5 @@
 MetaFileClass {
- Name "{D9130D20F5A6942F}Prefabs/Triggers/TG5_ObjectiveTriggerEntity.et"
+ Name "{4085446E2B406849}Prefabs/Vehicles/Core/Vehicle_Base.et"
  Configurations {
   EntityTemplateResourceClass PC {
   }

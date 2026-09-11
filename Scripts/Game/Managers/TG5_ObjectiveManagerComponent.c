@@ -48,11 +48,20 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 	[Attribute(defvalue: "{93291E72AC23930F}Prefabs/AI/Waypoints/AIWaypoint_Defend.et", desc: "Waypoint given to every garrison group so it holds its spawn position.", category: "Objectives", params: "et")]
 	protected ResourceName m_sDefendWaypointPrefab;
 
+	[Attribute(defvalue: "{C012BB3488BEA0C2}Prefabs/Vehicles/Wheeled/BTR70/BTR70.et", desc: "Vehicle prefab spawned for heavy vehicle slots in an objective garrison.", category: "Objectives", params: "et")]
+	protected ResourceName m_sHeavyVehiclePrefab;
+
+	[Attribute(defvalue: "{254289B9C09904AB}Prefabs/Vehicles/Wheeled/BRDM2/BRDM2.et", desc: "Vehicle prefab spawned for light vehicle slots in an objective garrison.", category: "Objectives", params: "et")]
+	protected ResourceName m_sLightVehiclePrefab;
+
 	[Attribute(defvalue: "30", desc: "Radius (m) each garrison group defends around its own spawn position.", category: "Objectives", params: "5 200 1")]
 	protected float m_fGarrisonDefendRadius;
 
 	[Attribute(defvalue: "40", desc: "Minimum spacing (m) between garrison groups within one objective.", category: "Objectives", params: "0 200 1")]
 	protected float m_fGarrisonGroupSpacing;
+
+	[Attribute(defvalue: "30", desc: "Seconds after the last player leaves before the objective garrison is removed.", category: "Objectives", params: "0 600 1")]
+	protected float m_fGarrisonDespawnDelay;
 
 	[Attribute(defvalue: "10", desc: "Seconds required to capture an objective when uncontested.", category: "Objectives", params: "1 60 1")]
 	protected float m_fCaptureTime;
@@ -416,8 +425,10 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 		// Anyone else on the ground blocks the capture
 		if (IsContested())
 		{
+			bool wasContested = obj.IsContested();
 			obj.SetContested(true);
-			m_OnObjectiveContested.Invoke(obj, dominant.GetFactionKey());
+			if (!wasContested)
+				m_OnObjectiveContested.Invoke(obj, dominant.GetFactionKey());
 			
 			// Reset progress if contested
 			if (obj.IsBeingCaptured())
@@ -433,9 +444,13 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 		obj.SetBeingCaptured(true);
 		obj.SetCapturingFaction(dominant.GetFactionKey());
 
-		// Increment capture progress
+		// Increment capture progress based on the configured capture duration.
 		float currentProgress = obj.GetCaptureProgress();
-		float newProgress = currentProgress + m_fCaptureProgressIncrement;
+		float progressIncrement = m_fCaptureProgressIncrement;
+		if (m_fCaptureTime > 0.0 && m_fCaptureCheckInterval > 0.0)
+			progressIncrement = m_fCaptureCheckInterval / m_fCaptureTime;
+
+		float newProgress = currentProgress + progressIncrement;
 		
 		if (newProgress >= 1.0)
 		{
@@ -627,7 +642,8 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 			if (!group.GetSpawnImmediately())
 				group.SpawnUnits();
 
-			AddDefendWaypoint(group, spot);
+			AIWaypoint waypoint = AddDefendWaypoint(group, spot);
+			obj.AddAiWaypoint(waypoint);
 			groups.Insert(group);
 		}
 
@@ -635,7 +651,103 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 			return null;
 
 		obj.AddAiGroup(groups);
+		SpawnGarrisonVehicles(obj, center, radius);
 		return groups;
+	}
+
+	protected void SpawnGarrisonVehicles(notnull TG5_ObjectiveObject obj, vector center, float radius)
+	{
+		SpawnGarrisonVehicles(obj, center, radius, obj.GetHeavyVehNum(), m_sHeavyVehiclePrefab);
+		SpawnGarrisonVehicles(obj, center, radius, obj.GetLightVehNum(), m_sLightVehiclePrefab);
+	}
+
+	protected void SpawnGarrisonVehicles(notnull TG5_ObjectiveObject obj, vector center, float radius, int count, ResourceName vehiclePrefab)
+	{
+		if (count <= 0 || vehiclePrefab.IsEmpty())
+			return;
+
+		for (int i = 0; i < count; i++)
+		{
+			vector spot;
+			if (!FindGarrisonPosition(center, radius, spot))
+				continue;
+
+			EntitySpawnParams params = new EntitySpawnParams();
+			params.TransformMode = ETransformMode.WORLD;
+			Math3D.MatrixIdentity4(params.Transform);
+			params.Transform[3] = spot;
+
+			IEntity vehicle = GetGame().SpawnEntityPrefabEx(vehiclePrefab, false, params: params);
+			if (vehicle)
+			{
+				m_aGarrisonSpots.Insert(spot);
+				obj.AddAiVehicle(vehicle);
+				TG5_SpawnCrewComponent crewComponent = TG5_SpawnCrewComponent.Cast(vehicle.FindComponent(TG5_SpawnCrewComponent));
+				if (crewComponent)
+					crewComponent.SpawnOccupants();
+			}
+		}
+	}
+
+	// Delayed cleanup is cancellable by a later player entry. The request id
+	// prevents an older queued callback from removing a newly reused garrison.
+	void ScheduleGarrisonCleanup(notnull TG5_ObjectiveObject obj, int request)
+	{
+		if (!Replication.IsServer())
+			return;
+
+		if (m_fGarrisonDespawnDelay <= 0.0)
+		{
+			DespawnGarrison(obj, request);
+			return;
+		}
+
+		GetGame().GetCallqueue().CallLater(DespawnGarrison, m_fGarrisonDespawnDelay * 1000, false, obj, request);
+	}
+
+	protected void DespawnGarrison(TG5_ObjectiveObject obj, int request)
+	{
+		if (!Replication.IsServer() || !obj || obj.GetDeactivationRequest() != request)
+			return;
+
+		TG5_ObjectiveTriggerEntity trigger = obj.GetTrigger();
+		if (trigger && trigger.HasPlayerInside())
+			return;
+
+		foreach (SCR_AIGroup group : obj.GetAiGroups())
+		{
+			if (!group)
+				continue;
+
+			foreach (AIWaypoint waypoint : obj.GetAiWaypoints())
+			{
+				if (waypoint)
+					group.RemoveWaypointFromGroup(waypoint);
+			}
+		}
+
+		foreach (AIWaypoint waypoint : obj.GetAiWaypoints())
+		{
+			if (waypoint)
+				delete waypoint;
+		}
+
+		foreach (SCR_AIGroup group : obj.GetAiGroups())
+		{
+			if (!group)
+				continue;
+
+			group.DespawnMembers();
+			delete group;
+		}
+
+		foreach (IEntity vehicle : obj.GetAiVehicles())
+		{
+			if (vehicle)
+				delete vehicle;
+		}
+
+		obj.ClearAiGarrison();
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -684,14 +796,14 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 	// A tight defend waypoint per group is how vanilla keeps AI holding a spot
 	// rather than wandering the whole objective; fast init places them straight
 	// onto their defensive positions instead of having them walk there.
-	protected void AddDefendWaypoint(notnull SCR_AIGroup group, vector pos)
+	protected AIWaypoint AddDefendWaypoint(notnull SCR_AIGroup group, vector pos)
 	{
 		if (m_sDefendWaypointPrefab.IsEmpty())
-			return;
+			return null;
 
 		Resource res = Resource.Load(m_sDefendWaypointPrefab);
 		if (!res || !res.IsValid())
-			return;
+			return null;
 
 		EntitySpawnParams params = new EntitySpawnParams();
 		params.TransformMode = ETransformMode.WORLD;
@@ -700,7 +812,7 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 
 		AIWaypoint waypoint = AIWaypoint.Cast(GetGame().SpawnEntityPrefab(res, GetGame().GetWorld(), params));
 		if (!waypoint)
-			return;
+			return null;
 
 		waypoint.SetCompletionRadius(m_fGarrisonDefendRadius);
 
@@ -709,5 +821,6 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 			defendWaypoint.SetFastInit(true);
 
 		group.AddWaypoint(waypoint);
+		return waypoint;
 	}
 }
