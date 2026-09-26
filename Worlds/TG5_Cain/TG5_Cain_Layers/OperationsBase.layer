@@ -1,0 +1,12 @@
+SCR_SpawnPoint : "{5A2220DD0C16958B}Prefabs/MP/Spawning/SpawnPoint_US.et" {
+ coords 1648.659 110.688 7390.479
+}
+GenericEntity VehicleSpawnPoint : "{AEAF11F3832E654F}Prefabs/Editor/EffectsModuleEntities/EffectModule_DirectionArrow.et" {
+ components {
+  TG5_PopulateVehicleSpawnPointComponent "{6A5C6C019B964EFE}" {
+   m_sVehicleToSpawn ""
+  }
+ }
+ coords 1642.964 110.696 7403.826
+ scale 0.3
+}

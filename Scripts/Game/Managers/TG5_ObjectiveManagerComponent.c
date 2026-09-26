@@ -33,41 +33,20 @@ class TG5_ObjectiveManagerComponentClass : SCR_BaseGameModeComponentClass
 // in - which is what makes the objective id safe to use as an RPC key.
 class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 {
-	[Attribute(defvalue: "150", desc: "Radius (m) around an objective within which faction presence is evaluated.", category: "Objectives")]
 	protected float m_fCaptureRadius;
-
-	[Attribute(defvalue: "2", desc: "Seconds between capture evaluations on the authority.", category: "Objectives", params: "0.5 60 0.5")]
 	protected float m_fCaptureCheckInterval;
-
-	[Attribute(defvalue: "{D9130D20F5A6942F}Prefabs/Triggers/TG5_ObjectiveTriggerEntity.et", desc: "Presence trigger spawned at every objective (authority only).", category: "Objectives", params: "et")]
 	protected ResourceName m_sObjectiveTriggerPrefab;
-
-	[Attribute(defvalue: "{6F72F05752ED62A8}Prefabs/Groups/OPFOR/Group_USSR_FireGroup_Guard.et", desc: "Default AI group prefab used for objective garrisons (authority only).", category: "Objectives", params: "et")]
 	protected ResourceName m_sDefaultGarrisonPrefab;
-
-	[Attribute(defvalue: "{93291E72AC23930F}Prefabs/AI/Waypoints/AIWaypoint_Defend.et", desc: "Waypoint given to every garrison group so it holds its spawn position.", category: "Objectives", params: "et")]
 	protected ResourceName m_sDefendWaypointPrefab;
-
-	[Attribute(defvalue: "{C012BB3488BEA0C2}Prefabs/Vehicles/Wheeled/BTR70/BTR70.et", desc: "Vehicle prefab spawned for heavy vehicle slots in an objective garrison.", category: "Objectives", params: "et")]
 	protected ResourceName m_sHeavyVehiclePrefab;
-
-	[Attribute(defvalue: "{254289B9C09904AB}Prefabs/Vehicles/Wheeled/BRDM2/BRDM2.et", desc: "Vehicle prefab spawned for light vehicle slots in an objective garrison.", category: "Objectives", params: "et")]
 	protected ResourceName m_sLightVehiclePrefab;
-
-	[Attribute(defvalue: "30", desc: "Radius (m) each garrison group defends around its own spawn position.", category: "Objectives", params: "5 200 1")]
 	protected float m_fGarrisonDefendRadius;
-
-	[Attribute(defvalue: "40", desc: "Minimum spacing (m) between garrison groups within one objective.", category: "Objectives", params: "0 200 1")]
 	protected float m_fGarrisonGroupSpacing;
-
-	[Attribute(defvalue: "30", desc: "Seconds after the last player leaves before the objective garrison is removed.", category: "Objectives", params: "0 600 1")]
 	protected float m_fGarrisonDespawnDelay;
-
-	[Attribute(defvalue: "10", desc: "Seconds required to capture an objective when uncontested.", category: "Objectives", params: "1 60 1")]
 	protected float m_fCaptureTime;
-
-	[Attribute(defvalue: "0.1", desc: "Capture progress increment per check interval.", category: "Objectives", params: "0.01 1.0 0.01")]
 	protected float m_fCaptureProgressIncrement;
+
+	protected ResourceName m_sConfigResource = "{YourGUID}Configs/TG5_MissionConfig.conf";
 
 	// How many random spots to try before giving up on placing a group
 	protected static const int GARRISON_PLACEMENT_ATTEMPTS = 12;
@@ -80,6 +59,7 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 
 	//------------------------------------------------------------------------------------------------
 	protected static TG5_ObjectiveManagerComponent s_Instance;
+	protected static TG5_MissionConfig s_MissionConfig;
 
 	protected ref array<ref TG5_ObjectiveObject> m_aObjectives = new array<ref TG5_ObjectiveObject>();
 
@@ -101,6 +81,12 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 	static TG5_ObjectiveManagerComponent GetInstance()
 	{
 		return s_Instance;
+	}
+
+	//------------------------------------------------------------------------------------------------
+	static TG5_MissionConfig GetConfig()
+	{
+		return s_MissionConfig;
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -149,6 +135,8 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 	{
 		super.OnPostInit(owner);
 		s_Instance = this;
+		s_MissionConfig = SCR_ConfigHelperT<TG5_MissionConfig>.GetConfigObject(m_sConfigResource);
+		ApplyConfigValues();
 	}
 
 	//------------------------------------------------------------------------------------------------
@@ -184,6 +172,29 @@ class TG5_ObjectiveManagerComponent : SCR_BaseGameModeComponent
 		}
 
 		m_OnObjectivesReady.Invoke();
+	}
+
+	//------------------------------------------------------------------------------------------------
+	// Overrides the [Attribute] defaults with values from TG5_MissionConfig,
+	// when present. Keeps the prefab attribute defaults as a fallback so the
+	// component still works standalone if the config resource is missing.
+	protected void ApplyConfigValues()
+	{
+		if (!s_MissionConfig)
+			return;
+
+		m_fCaptureRadius = s_MissionConfig.GetCaptureRadius();
+		m_fCaptureCheckInterval = s_MissionConfig.GetCaptureCheckInterval();
+		m_sObjectiveTriggerPrefab = s_MissionConfig.GetObjectiveTriggerPrefab();
+		m_sDefaultGarrisonPrefab = s_MissionConfig.GetDefaultGarrisonPrefab();
+		m_sDefendWaypointPrefab = s_MissionConfig.GetDefendWaypointPrefab();
+		m_sHeavyVehiclePrefab = s_MissionConfig.GetHeavyVehiclePrefab();
+		m_sLightVehiclePrefab = s_MissionConfig.GetLightVehiclePrefab();
+		m_fGarrisonDefendRadius = s_MissionConfig.GetGarrisonDefendRadius();
+		m_fGarrisonGroupSpacing = s_MissionConfig.GetGarrisonGroupSpacing();
+		m_fGarrisonDespawnDelay = s_MissionConfig.GetGarrisonDespawnDelay();
+		m_fCaptureTime = s_MissionConfig.GetCaptureTime();
+		m_fCaptureProgressIncrement = s_MissionConfig.GetCaptureProgressIncrement();
 	}
 
 	//------------------------------------------------------------------------------------------------

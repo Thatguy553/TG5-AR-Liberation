@@ -1,0 +1,5 @@
+GenericEntity : "{AEAF11F3832E654F}Prefabs/Editor/EffectsModuleEntities/EffectModule_DirectionArrow.et" {
+ ID "5D22A8932E8381C8"
+ coords 1642.964 110.696 7403.826
+ scale 0.3
+}
